@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python — SkillUp</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html">Skill<span>Up</span></a>
+      <nav class="site-nav">
+        <a href="../index.html">Home</a>
+        <a href="javascript.html">JavaScript</a>
+        <a href="sql.html">SQL</a>
+        <a href="python.html" aria-current="page">Python</a>
+        <a href="fhir.html">FHIR</a>
+        <a href="soap.html">SOAP</a>
+        <a href="oauth.html">OAuth</a>
+        <a href="rest-apis.html">REST APIs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <a class="back-link" href="../index.html">&larr; Back to all modules</a>
+
+    <div class="module-header">
+      <p class="kicker">Module</p>
+      <h1>Python</h1>
+    </div>
+
+    <section class="intro">
+      <h2>Overview</h2>
+      <p>Python is a high-level, dynamically typed language known for readable syntax. Instead of curly braces, it uses indentation to define blocks of code, which keeps programs visually consistent.</p>
+      <p>Functions are defined with <code>def</code>, and Python ships with a large standard library plus a huge ecosystem of third-party packages — making it a common choice for automation, data analysis, and web backends with frameworks like Django and Flask.</p>
+      <p>Common building blocks include lists, dictionaries, and list comprehensions, along with <code>try</code>/<code>except</code> for handling errors gracefully.</p>
+    </section>
+
+    <section class="quiz-section">
+      <h2>Quiz</h2>
+      <p class="quiz-intro">Answer all five questions, then check your results.</p>
+      <div id="quiz"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
+  </footer>
+
+  <script src="../js/quiz.js"></script>
+  <script>
+    const quizData = {
+      questions: [
+        {
+          question: "How do you define a function named my_func in Python?",
+          options: ["def my_func():", "function myFunc() {}", "func myFunc()", "void myFunc()"],
+          correctIndex: 0,
+          explanation: " Python functions start with the def keyword, followed by the name, parentheses, and a colon."
+        },
+        {
+          question: "What does range(5) return in Python 3?",
+          options: ["A list of five numbers", "A range object that produces values lazily when iterated", "A tuple", "A string"],
+          correctIndex: 1,
+          explanation: " In Python 3, range() returns a lazy, iterable range object rather than building a full list in memory."
+        },
+        {
+          question: "Which line correctly creates a list of squares for 0 through 4 using a list comprehension?",
+          options: [
+            "[x**2 for x in range(5)]",
+            "list x**2 for x in range(5)",
+            "[x^2 for x in range(5)]",
+            "squares(x**2, range(5))"
+          ],
+          correctIndex: 0,
+          explanation: " List comprehensions use the form [expression for item in iterable]. Note ** is Python's exponent operator, not ^."
+        },
+        {
+          question: "What does the expression 5 / 0 raise in Python?",
+          options: ["ZeroDivisionError", "SyntaxError", "TypeError", "It returns 0"],
+          correctIndex: 0,
+          explanation: " Dividing by zero raises a ZeroDivisionError at runtime."
+        },
+        {
+          question: "Which keyword is used to catch exceptions in Python?",
+          options: ["catch", "except", "rescue", "handle"],
+          correctIndex: 1,
+          explanation: " Python uses try/except (optionally with else and finally) rather than try/catch."
+        }
+      ]
+    };
+    initQuiz("quiz", quizData);
+  </script>
+</body>
+</html>

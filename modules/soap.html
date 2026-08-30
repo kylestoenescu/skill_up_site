@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOAP — SkillUp</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html">Skill<span>Up</span></a>
+      <nav class="site-nav">
+        <a href="../index.html">Home</a>
+        <a href="javascript.html">JavaScript</a>
+        <a href="sql.html">SQL</a>
+        <a href="python.html">Python</a>
+        <a href="fhir.html">FHIR</a>
+        <a href="soap.html" aria-current="page">SOAP</a>
+        <a href="oauth.html">OAuth</a>
+        <a href="rest-apis.html">REST APIs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <a class="back-link" href="../index.html">&larr; Back to all modules</a>
+
+    <div class="module-header">
+      <p class="kicker">Module</p>
+      <h1>SOAP</h1>
+    </div>
+
+    <section class="intro">
+      <h2>Overview</h2>
+      <p>SOAP (Simple Object Access Protocol) is an XML-based messaging protocol for exchanging structured information between systems. It's older than REST and still widely used in enterprise, financial, and healthcare integrations.</p>
+      <p>Every SOAP message is wrapped in an <strong>Envelope</strong>, which contains an optional <strong>Header</strong> (metadata like authentication) and a required <strong>Body</strong> (the actual request or response). If something goes wrong, the response includes a <strong>Fault</strong> element describing the error.</p>
+      <p>A SOAP service publishes a <strong>WSDL</strong> (Web Services Description Language) file, which defines exactly what operations are available and what data they expect — giving SOAP a strict, machine-readable contract that REST doesn't enforce by default.</p>
+    </section>
+
+    <section class="quiz-section">
+      <h2>Quiz</h2>
+      <p class="quiz-intro">Answer all five questions, then check your results.</p>
+      <div id="quiz"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
+  </footer>
+
+  <script src="../js/quiz.js"></script>
+  <script>
+    const quizData = {
+      questions: [
+        {
+          question: "What format does SOAP use to structure its messages?",
+          options: ["JSON", "XML", "YAML", "Plain text"],
+          correctIndex: 1,
+          explanation: " SOAP messages are always XML documents with a strict structure."
+        },
+        {
+          question: "What document describes the operations, messages, and location of a SOAP web service?",
+          options: ["A Swagger file", "WSDL", "A README", "manifest.json"],
+          correctIndex: 1,
+          explanation: " WSDL (Web Services Description Language) is the XML contract that describes a SOAP service's operations."
+        },
+        {
+          question: "What is the outermost element of a SOAP message called?",
+          options: ["Body", "Header", "Envelope", "Fault"],
+          correctIndex: 2,
+          explanation: " The Envelope wraps the entire message, containing an optional Header and a required Body."
+        },
+        {
+          question: "Which element carries error information when a SOAP request fails?",
+          options: ["SOAP:Error", "SOAP:Fault", "SOAP:Exception", "SOAP:Warning"],
+          correctIndex: 1,
+          explanation: " A Fault element inside the Body reports errors, including a fault code and message."
+        },
+        {
+          question: "Compared to REST, SOAP is generally considered:",
+          options: [
+            "Lightweight and stateless by default",
+            "More rigid, with a strict contract and built-in standards like WS-Security",
+            "Only usable over FTP",
+            "Impossible to use with HTTP"
+          ],
+          correctIndex: 1,
+          explanation: " SOAP enforces a formal contract (WSDL) and supports built-in standards like WS-Security, making it stricter but more heavyweight than typical REST APIs."
+        }
+      ]
+    };
+    initQuiz("quiz", quizData);
+  </script>
+</body>
+</html>

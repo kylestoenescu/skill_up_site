@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>REST APIs — SkillUp</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html">Skill<span>Up</span></a>
+      <nav class="site-nav">
+        <a href="../index.html">Home</a>
+        <a href="javascript.html">JavaScript</a>
+        <a href="sql.html">SQL</a>
+        <a href="python.html">Python</a>
+        <a href="fhir.html">FHIR</a>
+        <a href="soap.html">SOAP</a>
+        <a href="oauth.html">OAuth</a>
+        <a href="rest-apis.html" aria-current="page">REST APIs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <a class="back-link" href="../index.html">&larr; Back to all modules</a>
+
+    <div class="module-header">
+      <p class="kicker">Module</p>
+      <h1>REST APIs</h1>
+    </div>
+
+    <section class="intro">
+      <h2>Overview</h2>
+      <p>REST (Representational State Transfer) is an architectural style for designing web APIs around <strong>resources</strong> — things like users, orders, or documents — each identified by its own URL.</p>
+      <p>Clients interact with resources using standard HTTP methods: <code>GET</code> to read, <code>POST</code> to create, <code>PUT</code>/<code>PATCH</code> to update, and <code>DELETE</code> to remove. Responses use HTTP status codes to signal the outcome, such as <code>200 OK</code>, <code>201 Created</code>, or <code>404 Not Found</code>.</p>
+      <p>A key principle of REST is that it's <strong>stateless</strong> — each request must carry everything the server needs to process it, since the server doesn't retain session state between requests. Payloads are most commonly formatted as JSON.</p>
+    </section>
+
+    <section class="quiz-section">
+      <h2>Quiz</h2>
+      <p class="quiz-intro">Answer all five questions, then check your results.</p>
+      <div id="quiz"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
+  </footer>
+
+  <script src="../js/quiz.js"></script>
+  <script>
+    const quizData = {
+      questions: [
+        {
+          question: "Which HTTP method is conventionally used to retrieve a resource without modifying it?",
+          options: ["POST", "GET", "DELETE", "PUT"],
+          correctIndex: 1,
+          explanation: " GET requests are meant to be safe and read-only, fetching a resource's current representation."
+        },
+        {
+          question: "What does it mean for a REST API to be \"stateless\"?",
+          options: [
+            "The server never stores any data",
+            "Each request must contain all the information needed to process it, since the server holds no client session state between requests",
+            "The API has no error states",
+            "Clients can only make one request per session"
+          ],
+          correctIndex: 1,
+          explanation: " Statelessness means the server doesn't remember prior requests — every request is self-contained, which helps APIs scale."
+        },
+        {
+          question: "Which HTTP status code indicates a request succeeded and a new resource was created?",
+          options: ["200 OK", "201 Created", "404 Not Found", "500 Internal Server Error"],
+          correctIndex: 1,
+          explanation: " 201 Created specifically signals that the request succeeded and resulted in a new resource, often returned from a POST."
+        },
+        {
+          question: "Which HTTP method is typically used to completely replace an existing resource?",
+          options: ["GET", "PATCH", "PUT", "OPTIONS"],
+          correctIndex: 2,
+          explanation: " PUT conventionally replaces a resource in full, while PATCH applies a partial update."
+        },
+        {
+          question: "In REST, resources are typically identified by:",
+          options: ["Function names", "URLs (URIs)", "Global variables", "Environment variables"],
+          correctIndex: 1,
+          explanation: " Every REST resource has its own URL, such as /users/42, which clients use to address it directly."
+        }
+      ]
+    };
+    initQuiz("quiz", quizData);
+  </script>
+</body>
+</html>

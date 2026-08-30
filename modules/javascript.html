@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JavaScript — SkillUp</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="../index.html">Skill<span>Up</span></a>
+      <nav class="site-nav">
+        <a href="../index.html">Home</a>
+        <a href="javascript.html" aria-current="page">JavaScript</a>
+        <a href="sql.html">SQL</a>
+        <a href="python.html">Python</a>
+        <a href="fhir.html">FHIR</a>
+        <a href="soap.html">SOAP</a>
+        <a href="oauth.html">OAuth</a>
+        <a href="rest-apis.html">REST APIs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <a class="back-link" href="../index.html">&larr; Back to all modules</a>
+
+    <div class="module-header">
+      <p class="kicker">Module</p>
+      <h1>JavaScript</h1>
+    </div>
+
+    <section class="intro">
+      <h2>Overview</h2>
+      <p>JavaScript is the scripting language that runs in every web browser, making pages interactive. It also runs outside the browser via runtimes like Node.js, powering servers, tooling, and scripts.</p>
+      <p>JavaScript is dynamically typed and event-driven. Variables are declared with <code>let</code>, <code>const</code>, or the older <code>var</code>, and the language relies heavily on functions — including closures, callbacks, and arrow functions — to structure code.</p>
+      <p>Modern JavaScript handles asynchronous work with <code>Promise</code> objects and the <code>async</code>/<code>await</code> syntax, letting code wait for things like network requests without blocking the rest of the page.</p>
+    </section>
+
+    <section class="quiz-section">
+      <h2>Quiz</h2>
+      <p class="quiz-intro">Answer all five questions, then check your results.</p>
+      <div id="quiz"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
+  </footer>
+
+  <script src="../js/quiz.js"></script>
+  <script>
+    const quizData = {
+      questions: [
+        {
+          question: "Which keyword declares a block-scoped variable that can be reassigned later?",
+          options: ["var", "let", "const", "function"],
+          correctIndex: 1,
+          explanation: " let is block-scoped and reassignable; const is block-scoped but cannot be reassigned, and var is function-scoped."
+        },
+        {
+          question: "What does console.log(typeof null) print?",
+          options: ["\"null\"", "\"undefined\"", "\"object\"", "\"boolean\""],
+          correctIndex: 2,
+          explanation: " This is a long-standing JavaScript quirk — typeof null returns \"object\", even though null is its own primitive type."
+        },
+        {
+          question: "Which method converts a JSON string into a JavaScript object?",
+          options: ["JSON.stringify()", "JSON.parse()", "Object.assign()", "JSON.toObject()"],
+          correctIndex: 1,
+          explanation: " JSON.parse() turns a JSON string into a JS value; JSON.stringify() does the reverse."
+        },
+        {
+          question: "What is a closure?",
+          options: [
+            "A function that retains access to variables from its outer scope even after that outer function has returned",
+            "A way to close a browser tab from JavaScript",
+            "A loop that never terminates",
+            "A method for closing a database connection"
+          ],
+          correctIndex: 0,
+          explanation: " Closures let inner functions \"remember\" the variables from the scope they were created in."
+        },
+        {
+          question: "Which of these correctly creates a Promise that resolves after 1 second?",
+          options: [
+            "new Promise((resolve) => setTimeout(resolve, 1000))",
+            "Promise.wait(1000)",
+            "setTimeout(new Promise(), 1000)",
+            "await Promise(1000)"
+          ],
+          correctIndex: 0,
+          explanation: " A Promise executor receives resolve and reject callbacks; calling resolve inside setTimeout resolves it after the delay."
+        }
+      ]
+    };
+    initQuiz("quiz", quizData);
+  </script>
+</body>
+</html>
