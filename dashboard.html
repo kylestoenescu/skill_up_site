@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — SkillUp</title>
+  <link rel="stylesheet" href="css/styles.css?v=4" />
+  <!-- modules.js must come first: nav.js reads the manifest from it.
+       Deferred scripts run in document order, so tag order guarantees it. -->
+  <script src="js/modules.js?v=4" defer></script>
+  <script src="js/nav.js?v=4" defer></script>
+</head>
+<body>
+
+  <!-- Filled in by js/nav.js. -->
+  <header class="site-header" data-site-header>
+    <noscript>
+      <div class="header-inner">
+        <a class="brand" href="index.html">Skill<span>Up</span></a>
+      </div>
+    </noscript>
+  </header>
+
+  <main>
+    <div class="module-header">
+      <p class="kicker">Progress</p>
+      <h1>Dashboard</h1>
+    </div>
+
+    <p class="dash-storage-warning" data-dash-storage-warning hidden>
+      This browser isn't allowing local storage, so nothing is being saved between visits.
+    </p>
+
+    <!-- Hero figure + supporting stat tiles. -->
+    <section class="dash-section" data-dash-summary></section>
+
+    <section class="dash-section dash-empty" data-dash-empty hidden>
+      <h2>No attempts yet</h2>
+      <p>Take a module quiz and your scores, mastery, and weak spots will show up here.</p>
+      <a class="btn" href="index.html">Browse modules</a>
+    </section>
+
+    <section class="dash-section">
+      <h2 class="dash-heading">Modules</h2>
+      <div data-dash-modules></div>
+    </section>
+
+    <section class="dash-section">
+      <h2 class="dash-heading">Recent attempts</h2>
+      <div data-dash-recent></div>
+    </section>
+
+    <section class="dash-section">
+      <h2 class="dash-heading">Questions to review</h2>
+      <p class="dash-subhead">The ones you've missed most often — these will seed flashcards later.</p>
+      <div data-dash-review></div>
+    </section>
+
+    <!-- Revealed by js/progress-io.js once it knows the storage layer loaded. -->
+    <section class="dash-section progress-tools" data-progress-tools hidden>
+      <h2>Backup &amp; restore</h2>
+      <p>Progress is saved in this browser only — it doesn't follow you to another device. Export a backup file to move it, or to keep it safe.</p>
+      <div class="progress-tools-actions">
+        <button type="button" class="btn btn-secondary" data-progress-export>Export progress</button>
+        <label class="btn btn-secondary file-btn">
+          Import progress
+          <input type="file" accept="application/json,.json" data-progress-import hidden />
+        </label>
+      </div>
+      <p class="progress-tools-status" role="status" data-progress-status></p>
+    </section>
+
+    <noscript>
+      <p class="noscript-note">
+        This dashboard is built in the browser, so it needs JavaScript. Please enable it and reload.
+      </p>
+    </noscript>
+  </main>
+
+  <footer class="site-footer">
+    <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
+  </footer>
+
+  <!-- progress.js is the data layer. The module data files supply question text
+       for the "Questions to review" table, which stores only question ids. -->
+  <script src="js/progress.js?v=4"></script>
+  <script src="js/data/javascript.js?v=4"></script>
+  <script src="js/data/sql.js?v=4"></script>
+  <script src="js/data/python.js?v=4"></script>
+  <script src="js/data/fhir.js?v=4"></script>
+  <script src="js/data/soap.js?v=4"></script>
+  <script src="js/data/oauth.js?v=4"></script>
+  <script src="js/data/rest-apis.js?v=4"></script>
+  <script src="js/dashboard.js?v=4"></script>
+  <script src="js/progress-io.js?v=4"></script>
+
+</body>
+</html>

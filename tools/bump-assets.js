@@ -52,7 +52,10 @@ const ROOT = path.resolve(__dirname, "..");
 
 /** Every HTML file that loads assets. */
 function htmlFiles() {
-  const files = [path.join(ROOT, "index.html")];
+  const files = fs
+    .readdirSync(ROOT)
+    .filter(function (f) { return f.endsWith(".html"); })
+    .map(function (f) { return path.join(ROOT, f); });
   const modulesDir = path.join(ROOT, "modules");
   fs.readdirSync(modulesDir)
     .filter((f) => f.endsWith(".html"))

@@ -53,8 +53,15 @@
    * what guarantees it. The fallback below keeps the brand and a Home link
    * working if modules.js is ever missing, rather than rendering nothing.
    * ------------------------------------------------------------------- */
+  /* Pages that aren't modules. They lead the nav, then the manifest's modules
+   * are appended. Add a non-module page here; add a module to js/modules.js. */
+  const STATIC_LINKS = [
+    { label: "Home", path: "index.html" },
+    { label: "Dashboard", path: "dashboard.html" }
+  ];
+
   function buildLinks() {
-    const links = [{ label: "Home", path: "index.html" }];
+    const links = STATIC_LINKS.slice();
 
     if (!window.SiteModules) {
       console.warn("SkillUp: js/modules.js did not load before js/nav.js — nav will show Home only.");

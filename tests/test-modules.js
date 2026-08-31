@@ -115,6 +115,37 @@ manifest.forEach(function (m) {
     html.indexOf('initQuiz("quiz", "' + m.id + '")') !== -1);
 });
 
+/*
+ * The dashboard resolves question TEXT from QUIZ_DATA, so it has to load every
+ * module's data file. Those script tags are hand-written while the manifest is
+ * generated from — a drift risk the manifest was meant to remove. If you add a
+ * module and forget its <script> here, the "Questions to review" table silently
+ * falls back to showing raw question ids. This check catches that.
+ */
+{
+  const dash = fs.readFileSync(ROOT + "/dashboard.html", "utf8");
+
+  check("dashboard: loads modules.js before nav.js",
+    scriptPos(dash, "js/modules.js") !== -1 &&
+    scriptPos(dash, "js/modules.js") < scriptPos(dash, "js/nav.js"));
+  check("dashboard: loads progress.js before dashboard.js",
+    scriptPos(dash, "js/progress.js") !== -1 &&
+    scriptPos(dash, "js/progress.js") < scriptPos(dash, "js/dashboard.js"));
+
+  let missing = [];
+  manifest.forEach(function (m) {
+    const dataFile = helpers.dataFileFor(m);
+    if (scriptPos(dash, dataFile) === -1) {
+      missing.push(dataFile);
+    } else if (scriptPos(dash, dataFile) > scriptPos(dash, "js/dashboard.js")) {
+      missing.push(dataFile + " (loaded AFTER dashboard.js)");
+    }
+  });
+  check("dashboard loads a data file for every module in the manifest" +
+    (missing.length ? "\n      missing: " + missing.join(", ") : ""),
+    missing.length === 0);
+}
+
 // --- the home page no longer hard-codes tiles --------------------------
 {
   const home = fs.readFileSync(ROOT + "/index.html", "utf8");

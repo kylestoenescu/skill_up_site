@@ -49,25 +49,34 @@ function runNav(scriptSrc, pagePath) {
   vm.runInContext(modulesSrc, sb);
   vm.runInContext(navSrc, sb);
 
-  const links = header.querySelectorAll("nav a");
+  const links = header.querySelectorAll("nav a").map((a) => ({
+    label: a.textContent,
+    href: a.href,
+    current: a.getAttribute("aria-current")
+  }));
+
   return {
     header,
     brandHref: header.querySelectorAll(".brand")[0].href,
-    links: links.map((a) => ({
-      label: a.textContent,
-      href: a.href,
-      current: a.getAttribute("aria-current")
-    }))
+    links,
+    /* Look links up BY LABEL, never by position. Adding a non-module page
+     * (Dashboard) once shifted every index and broke nine assertions that were
+     * really only testing nav order. Label lookup survives that. */
+    byLabel: (label) => links.filter((l) => l.label === label)[0],
+    /* Just the module links — everything pointing into /modules/. */
+    moduleLinks: () => links.filter((l) => l.href.indexOf("/modules/") !== -1)
   };
 }
 
 // --- home page, custom domain at the site root -------------------------
 {
   const r = runNav("https://train.example.com/js/nav.js", "/index.html");
-  check("home: 8 links built from one definition", r.links.length === 8);
+  // Home + Dashboard + one link per module in the manifest.
+  check("home: link count = static pages + modules", r.links.length === 2 + r.moduleLinks().length);
   check("home: brand points at root index", r.brandHref === "https://train.example.com/index.html");
-  check("home: module link is root-relative", r.links[1].href === "https://train.example.com/modules/javascript.html");
-  check("home: Home marked current", r.links[0].current === "page");
+  check("home: module link is root-relative", r.byLabel("JavaScript").href === "https://train.example.com/modules/javascript.html");
+  check("home: Dashboard link present", r.byLabel("Dashboard").href === "https://train.example.com/dashboard.html");
+  check("home: Home marked current", r.byLabel("Home").current === "page");
   check("home: exactly one aria-current", r.links.filter((l) => l.current).length === 1);
 }
 
@@ -75,37 +84,46 @@ function runNav(scriptSrc, pagePath) {
 {
   const r = runNav("https://train.example.com/js/nav.js", "/modules/sql.html");
   check("module: brand climbs back to root", r.brandHref === "https://train.example.com/index.html");
-  check("module: sibling link resolves correctly", r.links[2].href === "https://train.example.com/modules/sql.html");
-  check("module: SQL marked current", r.links[2].current === "page");
-  check("module: Home NOT marked current", r.links[0].current === null);
+  check("module: sibling link resolves correctly", r.byLabel("SQL").href === "https://train.example.com/modules/sql.html");
+  check("module: SQL marked current", r.byLabel("SQL").current === "page");
+  check("module: Home NOT marked current", r.byLabel("Home").current === null);
+  check("module: Dashboard resolves up a level", r.byLabel("Dashboard").href === "https://train.example.com/dashboard.html");
   check("module: exactly one aria-current", r.links.filter((l) => l.current).length === 1);
 }
 
 // --- bare directory URL (server serves index.html) ---------------------
 {
   const r = runNav("https://train.example.com/js/nav.js", "/");
-  check('"/" is treated as /index.html', r.links[0].current === "page");
+  check('"/" is treated as /index.html', r.byLabel("Home").current === "page");
+}
+
+// --- the dashboard marks itself current --------------------------------
+{
+  const r = runNav("https://train.example.com/js/nav.js", "/dashboard.html");
+  check("dashboard: Dashboard marked current", r.byLabel("Dashboard").current === "page");
+  check("dashboard: Home NOT marked current", r.byLabel("Home").current === null);
+  check("dashboard: exactly one aria-current", r.links.filter((l) => l.current).length === 1);
 }
 
 // --- GitHub Pages project subpath (username.github.io/skill_up_site/) --
 {
   const r = runNav("https://user.github.io/skill_up_site/js/nav.js", "/skill_up_site/modules/oauth.html");
-  check("project subpath: links keep the repo prefix", r.links[1].href === "https://user.github.io/skill_up_site/modules/javascript.html");
-  check("project subpath: OAuth marked current", r.links[6].current === "page");
+  check("project subpath: links keep the repo prefix", r.byLabel("JavaScript").href === "https://user.github.io/skill_up_site/modules/javascript.html");
+  check("project subpath: OAuth marked current", r.byLabel("OAuth").current === "page");
 }
 
 // --- local file:// double-click ----------------------------------------
 {
   const r = runNav("file:///C:/Users/kyles/site/js/nav.js", "/C:/Users/kyles/site/modules/fhir.html");
-  check("file://: links resolve against the folder", r.links[4].href === "file:///C:/Users/kyles/site/modules/fhir.html");
-  check("file://: FHIR marked current", r.links[4].current === "page");
+  check("file://: links resolve against the folder", r.byLabel("FHIR").href === "file:///C:/Users/kyles/site/modules/fhir.html");
+  check("file://: FHIR marked current", r.byLabel("FHIR").current === "page");
 }
 
 // --- the nav list matches the pages that actually exist ----------------
 {
   const r = runNav("https://train.example.com/js/nav.js", "/index.html");
   const onDisk = fs.readdirSync(ROOT + "modules").filter((f) => f.endsWith(".html")).sort();
-  const inNav = r.links.slice(1).map((l) => l.href.split("/modules/")[1]).sort();
+  const inNav = r.moduleLinks().map((l) => l.href.split("/modules/")[1]).sort();
   check("nav lists exactly the module pages on disk", inNav.join(",") === onDisk.join(","));
 }
 

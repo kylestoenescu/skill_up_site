@@ -177,16 +177,25 @@ main {
   border-color: var(--accent);
 }
 
+/* Base badge — the shared look. Size is set by the context that uses it, so a
+   badge always has a FIXED width and never sizes to its own text; otherwise
+   "JS" and "FHIR" come out different widths and the labels beside them fail to
+   line up down a column. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-weight: 700;
+  border-radius: 8px;
+  flex: none;
+}
+
 .module-card .badge {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: var(--accent-soft);
-  color: var(--accent-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
   font-size: 0.95rem;
 }
 
@@ -222,6 +231,338 @@ main {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--accent);
+}
+
+.home-dash-link {
+  margin: 28px 0 0;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* ==========================================================================
+   dashboard (js/dashboard.js)
+
+   Conventions borrowed from the site's own tokens:
+     mastered    -> --success  (validated: ΔE 30.1 vs accent under deuteranopia)
+     in progress -> --accent
+     not started -> no fill, neutral track only
+
+   Colour encodes STATE, never magnitude — the bar's length already carries the
+   value, and colouring it darker-because-longer would say the same thing twice.
+   Every meter is paired with its score in text, so colour is never the only
+   way to read a row.
+   ========================================================================== */
+
+.dash-section {
+  margin-bottom: 40px;
+}
+
+.dash-heading {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0 0 4px;
+}
+
+.dash-subhead {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.dash-heading + [data-dash-modules],
+.dash-heading + [data-dash-recent],
+.dash-heading + [data-dash-review] {
+  margin-top: 16px;
+}
+
+.dash-storage-warning {
+  background: var(--error-soft);
+  border: 1px solid var(--error);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  font-size: 0.9rem;
+  margin: 0 0 28px;
+}
+
+/* ---------- hero figure: exactly one per view ---------- */
+
+.dash-hero {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.dash-hero-value {
+  /* Proportional figures, not tabular: at display sizes tabular-nums gives
+     every digit the width of a zero, which makes a number look loose. */
+  font-size: 3.5rem;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+  margin: 0;
+}
+
+.dash-hero-label {
+  margin: 8px 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.dash-hero-sub {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ---------- supporting stat tiles ---------- */
+
+.dash-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.dash-tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.dash-tile-value {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.dash-tile-label {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ---------- per-module meter rows ---------- */
+
+.dash-modules {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dash-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dash-row:hover {
+  text-decoration: none;
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+/* Fixed width so every module title starts at the same x, whatever the badge
+   text is ("JS" vs "FHIR"). */
+.dash-row .badge {
+  width: 52px;
+  height: 26px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  margin-top: 1px;
+}
+
+.dash-row-body {
+  flex: 1;
+  min-width: 0; /* lets long titles wrap instead of forcing the row wider */
+}
+
+.dash-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.dash-row-title {
+  font-weight: 600;
+}
+
+.dash-row-value {
+  /* tabular-nums IS right here: these align down a column of rows. */
+  font-variant-numeric: tabular-nums;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/*
+   The meter. Thin (8px, well under the 24px cap), square at the baseline where
+   it starts and 4px-rounded at the data end. The track is a lighter step of the
+   fill's own hue so the state reads across the whole bar, not just the filled
+   part. No border around the fill — the track provides the separation.
+*/
+.dash-meter {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.dash-meter-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 0 4px 4px 0;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.dash-meter.is-mastered {
+  background: var(--success-soft);
+}
+
+.dash-meter.is-mastered .dash-meter-fill {
+  background: var(--success);
+}
+
+.dash-meter.is-progress {
+  background: var(--accent-soft);
+}
+
+.dash-meter.is-progress .dash-meter-fill {
+  background: var(--accent);
+}
+
+.dash-row-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.dash-row-meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* ---------- tables (recent attempts, questions to review) ---------- */
+
+.dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  font-size: 0.9rem;
+}
+
+.dash-table th {
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.dash-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.dash-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.dash-cell-when {
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.dash-cell-num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.dash-cell-question {
+  min-width: 220px;
+}
+
+.dash-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dash-pill.is-pass {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.dash-pill.is-fail {
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.dash-note {
+  margin: 10px 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.dash-empty {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+}
+
+.dash-empty h2 {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+}
+
+.dash-empty p {
+  margin: 0 0 18px;
+  color: var(--text-muted);
+}
+
+/* Wide tables scroll inside their own container rather than pushing the page
+   sideways on a narrow screen. */
+@media (max-width: 620px) {
+  [data-dash-recent],
+  [data-dash-review] {
+    overflow-x: auto;
+  }
+
+  .dash-row-head {
+    flex-direction: column;
+    gap: 2px;
+  }
 }
 
 .noscript-note {
