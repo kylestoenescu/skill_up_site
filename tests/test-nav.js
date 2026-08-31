@@ -120,7 +120,7 @@ function runNav(scriptSrc, pagePath) {
     const html = fs.readFileSync(ROOT + p, "utf8");
     if (!/<header class="site-header" data-site-header>/.test(html)) { ok = false; console.log("   missing placeholder: " + p); }
     if (!/<noscript>/.test(html)) { ok = false; console.log("   missing noscript: " + p); }
-    if (!/src="[^"]*js\/nav\.js" defer/.test(html)) { ok = false; console.log("   missing nav.js: " + p); }
+    if (!/src="[^"]*js\/nav\.js(\?v=\d+)?" defer/.test(html)) { ok = false; console.log("   missing nav.js: " + p); }
     // the old hard-coded 8-link nav should be gone from the live markup
     const outsideNoscript = html.replace(/<noscript>[\s\S]*?<\/noscript>/g, "");
     if (/modules\/rest-apis\.html|rest-apis\.html">REST APIs/.test(outsideNoscript) && p !== "index.html") {
@@ -139,7 +139,8 @@ function runNav(scriptSrc, pagePath) {
     const html = fs.readFileSync(ROOT + "modules/" + p, "utf8");
     if (/correctIndex/.test(html)) { clean = false; console.log("   inline quiz data still in: " + p); }
     if (!/src="\.\.\/js\/data\//.test(html)) { clean = false; console.log("   no data file loaded in: " + p); }
-    if (!/src="\.\.\/js\/progress\.js"/.test(html)) { clean = false; console.log("   progress.js not loaded in: " + p); }
+    // the (\?v=\d+)? allows for the cache-busting stamp from tools/bump-assets.js
+    if (!/src="\.\.\/js\/progress\.js(\?v=\d+)?"/.test(html)) { clean = false; console.log("   progress.js not loaded in: " + p); }
   });
   check("quiz data fully extracted out of every module page", clean);
 }

@@ -19,7 +19,8 @@ const SUITES = [
   ["test-modules.js", "module manifest matches the files on disk"],
   ["test-progress.js", "progress.js storage layer"],
   ["test-quiz.js", "quiz.js engine, shuffling and grading"],
-  ["test-nav.js", "nav.js paths and page wiring"]
+  ["test-nav.js", "nav.js paths and page wiring"],
+  ["test-cache-busting.js", "asset version stamps (stale-cache guard)"]
 ];
 
 let failed = [];

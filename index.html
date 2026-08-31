@@ -4,12 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SkillUp — Developer Training</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=2" />
   <!-- modules.js must come first: nav.js and home.js both read the manifest
        from it. Deferred scripts run in document order, so tag order is what
        guarantees that. -->
-  <script src="js/modules.js" defer></script>
-  <script src="js/nav.js" defer></script>
+  <script src="js/modules.js?v=2" defer></script>
+  <script src="js/nav.js?v=2" defer></script>
 </head>
 <body>
 
@@ -60,9 +60,9 @@
 
   <!-- progress.js first: home.js reads best scores through it to put a status
        line on each tile. -->
-  <script src="js/progress.js"></script>
-  <script src="js/home.js"></script>
-  <script src="js/progress-io.js"></script>
+  <script src="js/progress.js?v=2"></script>
+  <script src="js/home.js?v=2"></script>
+  <script src="js/progress-io.js?v=2"></script>
 
 </body>
 </html>

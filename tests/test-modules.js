@@ -45,7 +45,10 @@ function scriptPos(html, file) {
   const re = /src="([^"]*)"/g;
   let m;
   while ((m = re.exec(html)) !== null) {
-    const normalised = m[1].replace(/^(\.\.\/)+/, "").replace(/^\.\//, "");
+    const normalised = m[1]
+      .replace(/\?.*$/, "") // drop the ?v=N cache-busting query
+      .replace(/^(\.\.\/)+/, "")
+      .replace(/^\.\//, "");
     if (normalised === file) return m.index;
   }
   return -1;

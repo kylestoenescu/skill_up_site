@@ -76,8 +76,11 @@
    * later inside a callback, where it would be null. The querySelector is a
    * belt-and-braces fallback in case this file is ever loaded in a way that
    * doesn't set currentScript (e.g. dynamically injected). */
+  /* `*=` not `$=`: script URLs carry a cache-busting query string
+   * (js/nav.js?v=3), so the src does not END with the filename. See
+   * tools/bump-assets.js for why that query string exists. */
   const thisScript =
-    document.currentScript || document.querySelector('script[src$="js/nav.js"]');
+    document.currentScript || document.querySelector('script[src*="js/nav.js"]');
 
   /* .src always reports the fully-resolved absolute URL, even when the HTML
    * attribute said "../js/nav.js". Strip the trailing "js/nav.js" (plus any

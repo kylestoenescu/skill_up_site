@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SOAP — SkillUp</title>
-  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/styles.css?v=2" />
   <!-- modules.js must load before nav.js: the nav is built from that manifest.
        Deferred scripts run in document order, so tag order guarantees it. -->
-  <script src="../js/modules.js" defer></script>
-  <script src="../js/nav.js" defer></script>
+  <script src="../js/modules.js?v=2" defer></script>
+  <script src="../js/nav.js?v=2" defer></script>
 </head>
 <body>
 
@@ -49,9 +49,9 @@
   </footer>
 
   <!-- Load order matters: storage layer, then engine, then this module's data. -->
-  <script src="../js/progress.js"></script>
-  <script src="../js/quiz.js"></script>
-  <script src="../js/data/soap.js"></script>
+  <script src="../js/progress.js?v=2"></script>
+  <script src="../js/quiz.js?v=2"></script>
+  <script src="../js/data/soap.js?v=2"></script>
   <script>
     initQuiz("quiz", "soap");
   </script>

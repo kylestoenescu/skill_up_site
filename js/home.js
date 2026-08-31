@@ -25,8 +25,10 @@
    * the generated links are correct regardless of where the page lives. The
    * home page is always at the root today, but deriving it costs nothing and
    * stops this breaking if the page ever moves. */
+  /* `*=` not `$=`: script URLs carry a cache-busting query string
+   * (js/home.js?v=3). See tools/bump-assets.js. */
   const thisScript =
-    document.currentScript || document.querySelector('script[src$="js/home.js"]');
+    document.currentScript || document.querySelector('script[src*="js/home.js"]');
   const SITE_ROOT = thisScript ? thisScript.src.replace(/js\/home\.js(\?.*)?$/, "") : "";
 
   /**
