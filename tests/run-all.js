@@ -15,7 +15,8 @@ const { spawnSync } = require("child_process");
 const path = require("path");
 
 const SUITES = [
-  ["test-content-preserved.js", "quiz content matches the last commit"],
+  ["test-content-preserved.js", "quiz content matches the pre-refactor commit"],
+  ["test-modules.js", "module manifest matches the files on disk"],
   ["test-progress.js", "progress.js storage layer"],
   ["test-quiz.js", "quiz.js engine, shuffling and grading"],
   ["test-nav.js", "nav.js paths and page wiring"]

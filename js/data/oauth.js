@@ -5,7 +5,7 @@
 
 window.QUIZ_DATA = window.QUIZ_DATA || {};
 
-window.QUIZ_DATA.oauth = {
+window.QUIZ_DATA["oauth"] = {
   moduleId: "oauth",
   title: "OAuth",
   questions: [

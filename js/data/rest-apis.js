@@ -2,14 +2,14 @@
  * Quiz data — REST APIs module.
  * See js/data/javascript.js for the full explanation of this file's shape.
  *
- * Note the registry key is "restApis" (a valid JS identifier) while the
- * moduleId is "rest-apis" (matches the filename and the URL). The moduleId is
- * what gets written to storage, so it's the one that must never change.
+ * Registered under its moduleId, "rest-apis" — the same key the manifest, the
+ * page filename, and saved progress all use. Bracket notation is required
+ * because the id contains a hyphen.
  */
 
 window.QUIZ_DATA = window.QUIZ_DATA || {};
 
-window.QUIZ_DATA.restApis = {
+window.QUIZ_DATA["rest-apis"] = {
   moduleId: "rest-apis",
   title: "REST APIs",
   questions: [

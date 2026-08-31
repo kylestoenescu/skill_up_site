@@ -201,11 +201,36 @@ main {
   font-size: 0.92rem;
 }
 
+/* Per-module progress line on a tile, written by js/home.js. `margin-top: auto`
+   moves down to .go, so the status sits directly under the blurb and the
+   "Start module" link stays pinned to the bottom of every card regardless of
+   how long the blurb is. */
+.module-status {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.module-status.is-mastered {
+  color: var(--success);
+}
+
 .module-card .go {
   margin-top: auto;
+  padding-top: 4px;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--accent);
+}
+
+.noscript-note {
+  background: var(--error-soft);
+  border: 1px solid var(--error);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  color: var(--text);
+  margin: 16px 0 0;
 }
 
 /* ---------- module page ---------- */
@@ -294,16 +319,38 @@ li code {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px 22px;
-  margin-bottom: 16px;
+  margin: 0 0 16px;
+  /* Browsers give <fieldset> a default `min-width: min-content`, which stops it
+     shrinking properly inside flex/grid parents. Always reset it. */
+  min-width: 0;
 }
 
+/*
+   A <legend> is not a normal block. By default the browser lifts it OUT of the
+   fieldset's content flow and paints it ON the top border — that's how you get
+   the classic "label notched into the box outline" look. With a filled, rounded
+   box like ours the result is the question text sitting half outside the white
+   card, which is the spacing bug you spotted.
+
+   The fix is defined by the HTML spec rather than being a hack: an element only
+   gets that special "rendered legend" treatment if it is the first <legend>
+   child AND its computed `float` is `none` AND it is not absolutely positioned.
+   Floating it therefore opts out cleanly, and it lays out as an ordinary block
+   inside the box's padding. `.quiz-options` then clears the float.
+*/
 .quiz-question legend {
-  font-weight: 600;
-  padding: 0 0 12px;
+  float: left;
   width: 100%;
+  padding: 0;
+  margin: 0 0 14px;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: var(--text);
 }
 
 .quiz-options {
+  clear: both; /* drop below the floated legend */
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -317,6 +364,7 @@ li code {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   cursor: pointer;
+  line-height: 1.5;
   transition: background 0.12s ease, border-color 0.12s ease;
 }
 
@@ -325,8 +373,13 @@ li code {
   border-color: var(--accent);
 }
 
+/* Nudge the radio down to sit on the first line of text rather than the top of
+   the box. `em` keeps it aligned if the font size ever changes; a fixed px
+   value drifts out of alignment as soon as it does. `flex: none` stops the
+   radio being squashed when an option wraps to several lines. */
 .quiz-option input {
-  margin-top: 3px;
+  margin-top: 0.3em;
+  flex: none;
 }
 
 .quiz-option.is-correct {
@@ -340,10 +393,11 @@ li code {
 }
 
 .quiz-feedback {
-  margin-top: 12px;
+  margin-top: 14px;
   padding-top: 12px;
   border-top: 1px dashed var(--border);
   font-size: 0.9rem;
+  line-height: 1.55;
   display: none;
 }
 

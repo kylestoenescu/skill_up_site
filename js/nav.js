@@ -4,7 +4,8 @@
  * WHY THIS EXISTS
  * The header used to be copy-pasted into all 8 HTML files, so adding a module
  * meant 8 edits. Now every page ships an empty <header data-site-header> and
- * this script fills it in at runtime. Adding a module = one line in SITE_LINKS.
+ * this script fills it in at runtime, from the module manifest in js/modules.js.
+ * Adding a module = one entry in that manifest.
  *
  * THE TWO HARD PARTS, AND HOW THEY'RE SOLVED
  *
@@ -43,19 +44,32 @@
   "use strict";
 
   /* ---------------------------------------------------------------------
-   * The one place the nav is defined. Add a module here and every page
-   * picks it up. `path` is always written relative to the SITE ROOT.
+   * The nav is derived from the module manifest (js/modules.js) rather than
+   * being listed again here — one source of truth for what modules exist.
+   * Home is prepended because it isn't a module.
+   *
+   * modules.js must load first. Both are `defer` scripts in <head>, and
+   * deferred scripts run in document order, so the ordering of the tags is
+   * what guarantees it. The fallback below keeps the brand and a Home link
+   * working if modules.js is ever missing, rather than rendering nothing.
    * ------------------------------------------------------------------- */
-  const SITE_LINKS = [
-    { label: "Home", path: "index.html" },
-    { label: "JavaScript", path: "modules/javascript.html" },
-    { label: "SQL", path: "modules/sql.html" },
-    { label: "Python", path: "modules/python.html" },
-    { label: "FHIR", path: "modules/fhir.html" },
-    { label: "SOAP", path: "modules/soap.html" },
-    { label: "OAuth", path: "modules/oauth.html" },
-    { label: "REST APIs", path: "modules/rest-apis.html" }
-  ];
+  function buildLinks() {
+    const links = [{ label: "Home", path: "index.html" }];
+
+    if (!window.SiteModules) {
+      console.warn("SkillUp: js/modules.js did not load before js/nav.js — nav will show Home only.");
+      return links;
+    }
+
+    window.SiteModules.all().forEach(function (module) {
+      links.push({
+        label: module.title,
+        path: window.SiteModules.pageFor(module)
+      });
+    });
+
+    return links;
+  }
 
   /* document.currentScript is the <script> element currently executing. It is
    * only valid while the script body runs, so we read it immediately — not
@@ -105,7 +119,7 @@
     nav.className = "site-nav";
     nav.setAttribute("aria-label", "Main");
 
-    SITE_LINKS.forEach((link) => {
+    buildLinks().forEach((link) => {
       const a = document.createElement("a");
       a.href = SITE_ROOT + link.path;
       a.textContent = link.label;

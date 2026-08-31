@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JavaScript — SkillUp</title>
   <link rel="stylesheet" href="../css/styles.css" />
-  <!-- Builds the header/nav at runtime. Defined once in js/nav.js. -->
+  <!-- modules.js must load before nav.js: the nav is built from that manifest.
+       Deferred scripts run in document order, so tag order guarantees it. -->
+  <script src="../js/modules.js" defer></script>
   <script src="../js/nav.js" defer></script>
 </head>
 <body>
@@ -51,7 +53,7 @@
   <script src="../js/quiz.js"></script>
   <script src="../js/data/javascript.js"></script>
   <script>
-    initQuiz("quiz", QUIZ_DATA.javascript);
+    initQuiz("quiz", "javascript");
   </script>
 </body>
 </html>

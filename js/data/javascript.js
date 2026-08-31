@@ -34,7 +34,7 @@
 
 window.QUIZ_DATA = window.QUIZ_DATA || {};
 
-window.QUIZ_DATA.javascript = {
+window.QUIZ_DATA["javascript"] = {
   moduleId: "javascript",
   title: "JavaScript",
   questions: [

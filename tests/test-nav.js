@@ -5,6 +5,8 @@ const { El, makeDocument } = require("./dom-shim.js");
 
 const ROOT = require("path").resolve(__dirname, "..") + "/";
 const navSrc = fs.readFileSync(ROOT + "js/nav.js", "utf8");
+// nav.js now builds its links from the module manifest, so that must load first.
+const modulesSrc = fs.readFileSync(ROOT + "js/modules.js", "utf8");
 
 // Anchors need href -> pathname resolution, like a real browser gives you.
 Object.defineProperty(El.prototype, "href", {
@@ -44,6 +46,7 @@ function runNav(scriptSrc, pagePath) {
   };
   sb.window = sb;
   vm.createContext(sb);
+  vm.runInContext(modulesSrc, sb);
   vm.runInContext(navSrc, sb);
 
   const links = header.querySelectorAll("nav a");

@@ -5,7 +5,7 @@
 
 window.QUIZ_DATA = window.QUIZ_DATA || {};
 
-window.QUIZ_DATA.sql = {
+window.QUIZ_DATA["sql"] = {
   moduleId: "sql",
   title: "SQL",
   questions: [

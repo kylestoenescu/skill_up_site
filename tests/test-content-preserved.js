@@ -13,15 +13,9 @@ const ROOT = require("path").resolve(__dirname, "..");
  * lived inline in the module pages. Pinned rather than using HEAD, so this
  * check keeps working after the refactor is committed. */
 const BASELINE = "df4817d";
-const PAGES = {
-  javascript: "javascript",
-  sql: "sql",
-  python: "python",
-  fhir: "fhir",
-  soap: "soap",
-  oauth: "oauth",
-  "rest-apis": "restApis"
-};
+/* Data files now register under their moduleId, which is also the page
+ * basename — so the page name and the QUIZ_DATA key are the same string. */
+const PAGES = ["javascript", "sql", "python", "fhir", "soap", "oauth", "rest-apis"];
 
 // Load the NEW data files.
 const sb = { window: {} };
@@ -34,7 +28,8 @@ for (const f of fs.readdirSync(ROOT + "/js/data")) {
 let problems = 0;
 let compared = 0;
 
-for (const [page, key] of Object.entries(PAGES)) {
+for (const page of PAGES) {
+  const key = page;
   // Old inline data, straight from the last commit.
   const oldHtml = execSync(`git show ${BASELINE}:modules/${page}.html`, { cwd: ROOT }).toString();
   const match = oldHtml.match(/const quizData = ([\s\S]*?);\s*\n\s*initQuiz/);
@@ -80,7 +75,7 @@ for (const [page, key] of Object.entries(PAGES)) {
   });
 }
 
-console.log(`\ncompared ${compared} questions across ${Object.keys(PAGES).length} modules`);
+console.log(`\ncompared ${compared} questions across ${PAGES.length} modules`);
 console.log(problems === 0
   ? `RESULT: content identical to ${BASELINE} (only leading spaces removed)`
   : `RESULT: ${problems} DIFFERENCE(S) — see above`);

@@ -5,7 +5,7 @@
 
 window.QUIZ_DATA = window.QUIZ_DATA || {};
 
-window.QUIZ_DATA.python = {
+window.QUIZ_DATA["python"] = {
   moduleId: "python",
   title: "Python",
   questions: [

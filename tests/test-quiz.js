@@ -29,6 +29,7 @@ function newSandbox() {
   };
   sb.window = sb;
   vm.createContext(sb);
+  vm.runInContext(fs.readFileSync(ROOT + "js/modules.js", "utf8"), sb);
   vm.runInContext(fs.readFileSync(ROOT + "js/progress.js", "utf8"), sb);
   vm.runInContext(fs.readFileSync(ROOT + "js/quiz.js", "utf8"), sb);
   for (const f of fs.readdirSync(ROOT + "js/data")) {

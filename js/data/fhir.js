@@ -5,7 +5,7 @@
 
 window.QUIZ_DATA = window.QUIZ_DATA || {};
 
-window.QUIZ_DATA.fhir = {
+window.QUIZ_DATA["fhir"] = {
   moduleId: "fhir",
   title: "FHIR",
   questions: [

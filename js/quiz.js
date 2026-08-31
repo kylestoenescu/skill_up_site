@@ -84,12 +84,25 @@ function pluralise(n, word) {
  * Builds and mounts a quiz into a container element.
  *
  * @param {string} containerId id of the element to render into
- * @param {object} quizData the module's data object (see js/data/*.js)
+ * @param {string|object} module the module id (e.g. "rest-apis"), looked up in
+ *        window.QUIZ_DATA — or the data object itself, if you already have it
  */
-function initQuiz(containerId, quizData) {
+function initQuiz(containerId, module) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  if (!quizData || !Array.isArray(quizData.questions) || quizData.questions.length === 0) return;
+
+  /* Passing the id is the normal case: the data file registered itself under
+   * that key, so the page doesn't need to repeat the object's variable name.
+   * Accepting an object too keeps this usable for one-off or generated quizzes
+   * (a flashcard drill built from missed questions, for instance) that never
+   * live in QUIZ_DATA. */
+  const quizData =
+    typeof module === "string" ? (window.QUIZ_DATA || {})[module] : module;
+
+  if (!quizData || !Array.isArray(quizData.questions) || quizData.questions.length === 0) {
+    console.warn("SkillUp: no quiz data found for", module);
+    return;
+  }
 
   const moduleId = quizData.moduleId;
 

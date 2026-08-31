@@ -5,7 +5,7 @@
 
 window.QUIZ_DATA = window.QUIZ_DATA || {};
 
-window.QUIZ_DATA.soap = {
+window.QUIZ_DATA["soap"] = {
   moduleId: "soap",
   title: "SOAP",
   questions: [
