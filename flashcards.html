@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flashcards — SkillUp</title>
+  <link rel="stylesheet" href="css/styles.css?v=5" />
+  <!-- modules.js must come first: nav.js reads the manifest from it.
+       Deferred scripts run in document order, so tag order guarantees it. -->
+  <script src="js/modules.js?v=5" defer></script>
+  <script src="js/nav.js?v=5" defer></script>
+</head>
+<body>
+
+  <!-- Filled in by js/nav.js. -->
+  <header class="site-header" data-site-header>
+    <noscript>
+      <div class="header-inner">
+        <a class="brand" href="index.html">Skill<span>Up</span></a>
+      </div>
+    </noscript>
+  </header>
+
+  <main>
+    <div class="module-header">
+      <p class="kicker">Review</p>
+      <h1>Flashcards</h1>
+    </div>
+
+    <p class="fc-intro">
+      Questions you've missed, drilled one at a time across every module. Answer
+      one correctly three times in a row and it drops out of the deck.
+    </p>
+
+    <p class="dash-storage-warning" data-fc-storage-warning hidden>
+      This browser isn't allowing local storage, so this session won't be saved.
+    </p>
+
+    <!-- One filter row above the thing it scopes. -->
+    <div class="fc-controls">
+      <label class="fc-filter-label" for="fc-filter">Module</label>
+      <select id="fc-filter" class="fc-filter" data-fc-filter></select>
+      <span class="fc-progress" data-fc-progress></span>
+    </div>
+
+    <div data-fc-stage></div>
+
+    <noscript>
+      <p class="noscript-note">
+        Flashcards are built in the browser from your saved progress, so this
+        page needs JavaScript. Please enable it and reload.
+      </p>
+    </noscript>
+  </main>
+
+  <footer class="site-footer">
+    <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
+  </footer>
+
+  <!-- progress.js supplies the deck and records results. The data files supply
+       the question text, which progress.js does not store. -->
+  <script src="js/progress.js?v=5"></script>
+  <script src="js/data/javascript.js?v=5"></script>
+  <script src="js/data/sql.js?v=5"></script>
+  <script src="js/data/python.js?v=5"></script>
+  <script src="js/data/fhir.js?v=5"></script>
+  <script src="js/data/soap.js?v=5"></script>
+  <script src="js/data/oauth.js?v=5"></script>
+  <script src="js/data/rest-apis.js?v=5"></script>
+  <script src="js/flashcards.js?v=5"></script>
+
+</body>
+</html>

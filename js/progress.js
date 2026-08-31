@@ -71,11 +71,12 @@
  *   }
  * }
  *
- * MODE note: a "retry" attempt is the targeted redo of only the questions you
- * missed. It updates question stats (you did genuinely answer those questions
- * again) but is EXCLUDED from best-score and mastery, because scoring 2/2 on a
- * two-question retry is not the same achievement as scoring 5/5 on the full
- * quiz. Mastery has to be earned on a full run.
+ * MODE note: every recorded session updates per-question stats, but only a
+ * "full" run counts toward best score and mastery. A "retry" is the targeted
+ * redo of questions you missed — scoring 2/2 on a two-question retry is not the
+ * same achievement as 5/5 on the full quiz. A "review" is a flashcard session
+ * (js/flashcards.js), which is not a quiz attempt at all and is excluded from
+ * the attempt count too. See ATTEMPT_MODES.
  *
  * `chosenIndex` is stored as the index into the options array AS AUTHORED in
  * the data file, never the on-screen position — the quiz shuffles options, so
@@ -98,6 +99,46 @@
 
   /** Keep the most recent N attempts per module; older ones are dropped. */
   const MAX_ATTEMPTS_PER_MODULE = 50;
+
+  /**
+   * The kinds of recorded session. ALL of them update per-question stats; they
+   * differ in what they count for.
+   *
+   *   full    a complete quiz run — the only kind eligible for best score
+   *           and module mastery
+   *   retry   the targeted redo of questions missed in a full run
+   *   review  a flashcard review session (js/flashcards.js)
+   *
+   * Anything not on this list is coerced to "full", which is why adding a new
+   * kind means adding it HERE first. A "review" session recorded before this
+   * list knew the word would have been stored as "full" and silently counted
+   * toward the best score.
+   */
+  const ATTEMPT_MODES = ["full", "retry", "review"];
+
+  /** Modes that represent an actual quiz attempt, as opposed to a review. */
+  const QUIZ_MODES = ["full", "retry"];
+
+  /**
+   * Leitner-style review intervals, indexed by the question's current
+   * correct-streak. A question with streak 0 is always due; streak 1 comes back
+   * after a day; streak 2 after three days; at RETIRE_STREAK it graduates out
+   * of the deck entirely.
+   *
+   * This is real spaced repetition, but a deliberately simple form: the
+   * schedule is DERIVED from data progress.js already stores (streak +
+   * lastSeenAt), so it needed no new fields and no migration. A full SM-2
+   * implementation with per-card ease factors and stored due dates would need
+   * a schema change — worth doing only if this proves too blunt.
+   */
+  const REVIEW_INTERVAL_DAYS = [0, 1, 3];
+  const RETIRE_STREAK = 3;
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  /** @param {string} mode @returns {string} a mode that's safe to store */
+  function normaliseMode(mode) {
+    return ATTEMPT_MODES.indexOf(mode) !== -1 ? mode : "full";
+  }
 
   // --- storage backend -----------------------------------------------------
 
@@ -208,7 +249,7 @@
           bucket.attempts.push({
             id: typeof attempt.id === "string" ? attempt.id : makeId(),
             completedAt: typeof attempt.completedAt === "string" ? attempt.completedAt : null,
-            mode: attempt.mode === "retry" ? "retry" : "full",
+            mode: normaliseMode(attempt.mode),
             score: attempt.score,
             total: attempt.total,
             answers: Array.isArray(attempt.answers) ? attempt.answers.filter(isPlainObject) : []
@@ -364,7 +405,7 @@
       const record = {
         id: makeId(),
         completedAt: nowISO(),
-        mode: attempt && attempt.mode === "retry" ? "retry" : "full",
+        mode: normaliseMode(attempt && attempt.mode),
         score: numberOr(attempt && attempt.score, 0),
         total: numberOr(attempt && attempt.total, 0),
         answers: Array.isArray(attempt && attempt.answers) ? attempt.answers : []
@@ -411,7 +452,8 @@
      * Everything a UI normally wants about one module, in one read.
      *
      * @param {string} moduleId
-     * @returns {{moduleId:string, attemptCount:number, fullAttemptCount:number,
+     * @returns {{moduleId:string, attemptCount:number, reviewCount:number,
+     *   fullAttemptCount:number,
      *   bestScore:number|null, bestTotal:number|null, bestPercent:number|null,
      *   mastered:boolean, lastAttempt:object|null}}
      */
@@ -430,15 +472,23 @@
         if (best === null || pct > best.score / best.total) best = a;
       });
 
+      /* Flashcard reviews are recorded per module but are NOT quiz attempts, so
+       * they're kept out of attemptCount — otherwise a review session would
+       * inflate "3 attempts" on the dashboard and the quiz banner. */
+      const quizAttempts = attempts.filter(function (a) {
+        return QUIZ_MODES.indexOf(a.mode) !== -1;
+      });
+
       return {
         moduleId: moduleId,
-        attemptCount: attempts.length,
+        attemptCount: quizAttempts.length,
+        reviewCount: attempts.length - quizAttempts.length,
         fullAttemptCount: fullAttempts.length,
         bestScore: best ? best.score : null,
         bestTotal: best ? best.total : null,
         bestPercent: best ? best.score / best.total : null,
         mastered: best ? best.score / best.total >= MASTERY_THRESHOLD : false,
-        lastAttempt: attempts.length ? attempts[attempts.length - 1] : null
+        lastAttempt: quizAttempts.length ? quizAttempts[quizAttempts.length - 1] : null
       };
     },
 
@@ -550,6 +600,117 @@
         .map(function (id) {
           return { questionId: id, stat: stats[id] };
         });
+    },
+
+    // --- flashcard review scheduling --------------------------------------
+
+    /** Streak at which a question graduates out of the review deck. */
+    RETIRE_STREAK: RETIRE_STREAK,
+
+    /**
+     * Records a flashcard review session. Same write path as a quiz attempt —
+     * so per-question stats update identically — but stored with mode "review",
+     * which keeps it out of best score, mastery, and the attempt count.
+     *
+     * @param {string} moduleId
+     * @param {Array<object>} answers same shape as recordAttempt's answers
+     * @returns {object} the stored record
+     */
+    recordReview: function (moduleId, answers) {
+      const list = Array.isArray(answers) ? answers : [];
+      return this.recordAttempt(moduleId, {
+        mode: "review",
+        score: list.filter(function (a) { return a && a.correct; }).length,
+        total: list.length,
+        answers: list
+      });
+    },
+
+    /**
+     * When a question should next come back, given its current stats.
+     *
+     * @param {object} stat a question stat record
+     * @param {Date} [now]
+     * @returns {{retired:boolean, due:boolean, dueAt:string|null}}
+     */
+    getReviewSchedule: function (stat, now) {
+      const at = now || new Date();
+
+      if (!stat || stat.seen === 0) {
+        // Never answered: not part of a *review* deck — there's nothing to review yet.
+        return { retired: false, due: false, dueAt: null };
+      }
+      if (stat.streak >= RETIRE_STREAK) {
+        return { retired: true, due: false, dueAt: null };
+      }
+
+      const days = REVIEW_INTERVAL_DAYS[stat.streak] || 0;
+      if (days === 0 || !stat.lastSeenAt) {
+        return { retired: false, due: true, dueAt: null };
+      }
+
+      const dueAt = new Date(new Date(stat.lastSeenAt).getTime() + days * MS_PER_DAY);
+      return {
+        retired: false,
+        due: at.getTime() >= dueAt.getTime(),
+        dueAt: dueAt.toISOString()
+      };
+    },
+
+    /**
+     * Builds the flashcard deck: questions you've answered before, haven't
+     * retired, ordered worst-first.
+     *
+     * "Worst first" means most misses, then longest since you last got it
+     * right — so the material you're actually weakest on comes up first rather
+     * than whatever happens to be alphabetically first.
+     *
+     * @param {string[]} moduleIds which modules to draw from
+     * @param {object} [options]
+     * @param {boolean} [options.includeNotDue=false] ignore the schedule and
+     *        include everything unretired — the "study ahead" case, for when
+     *        nothing is due yet but you want to drill anyway
+     * @param {Date} [options.now] injectable clock, so tests aren't time-flaky
+     * @returns {Array<{moduleId:string, questionId:string, stat:object,
+     *   due:boolean, dueAt:string|null}>}
+     */
+    getReviewQueue: function (moduleIds, options) {
+      const opts = options || {};
+      const now = opts.now || new Date();
+      const includeNotDue = opts.includeNotDue === true;
+      const self = this;
+      const queue = [];
+
+      (moduleIds || []).forEach(function (moduleId) {
+        const stats = self.getQuestionStats(moduleId);
+        Object.keys(stats).forEach(function (questionId) {
+          const stat = stats[questionId];
+          const schedule = self.getReviewSchedule(stat, now);
+
+          if (schedule.retired) return;
+          if (stat.seen === 0) return;
+          if (!schedule.due && !includeNotDue) return;
+
+          queue.push({
+            moduleId: moduleId,
+            questionId: questionId,
+            stat: stat,
+            due: schedule.due,
+            dueAt: schedule.dueAt
+          });
+        });
+      });
+
+      queue.sort(function (a, b) {
+        // Due cards always come before not-yet-due ones.
+        if (a.due !== b.due) return a.due ? -1 : 1;
+        // Then the ones you've missed most.
+        if (b.stat.incorrect !== a.stat.incorrect) return b.stat.incorrect - a.stat.incorrect;
+        // Then the ones you got right longest ago (null = never right = first).
+        return (a.stat.lastCorrectAt || "") < (b.stat.lastCorrectAt || "") ? -1 : 1;
+      });
+
+      return queue;
     },
 
     // --- export / import (the no-backend escape hatch) ---------------------

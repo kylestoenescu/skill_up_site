@@ -57,7 +57,8 @@
    * are appended. Add a non-module page here; add a module to js/modules.js. */
   const STATIC_LINKS = [
     { label: "Home", path: "index.html" },
-    { label: "Dashboard", path: "dashboard.html" }
+    { label: "Dashboard", path: "dashboard.html" },
+    { label: "Flashcards", path: "flashcards.html" }
   ];
 
   function buildLinks() {

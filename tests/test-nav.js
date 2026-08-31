@@ -71,8 +71,16 @@ function runNav(scriptSrc, pagePath) {
 // --- home page, custom domain at the site root -------------------------
 {
   const r = runNav("https://train.example.com/js/nav.js", "/index.html");
-  // Home + Dashboard + one link per module in the manifest.
-  check("home: link count = static pages + modules", r.links.length === 2 + r.moduleLinks().length);
+  /* Don't hard-code a total — that just breaks every time a page is added
+   * (it already did once, when Dashboard arrived). Assert the properties that
+   * actually matter: every module is linked exactly once, the standalone pages
+   * are present, and nothing is duplicated. */
+  const moduleCount = fs.readdirSync(ROOT + "modules").filter((f) => f.endsWith(".html")).length;
+  check("home: one nav link per module, no more", r.moduleLinks().length === moduleCount);
+  check("home: standalone pages all present",
+    ["Home", "Dashboard", "Flashcards"].every((label) => !!r.byLabel(label)));
+  check("home: no duplicate links",
+    new Set(r.links.map((l) => l.href)).size === r.links.length);
   check("home: brand points at root index", r.brandHref === "https://train.example.com/index.html");
   check("home: module link is root-relative", r.byLabel("JavaScript").href === "https://train.example.com/modules/javascript.html");
   check("home: Dashboard link present", r.byLabel("Dashboard").href === "https://train.example.com/dashboard.html");

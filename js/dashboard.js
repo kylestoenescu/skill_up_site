@@ -221,6 +221,9 @@
 
     modules.forEach(function (module) {
       window.Progress.getAttempts(module.id).forEach(function (attempt) {
+        /* Flashcard reviews live in the same log but aren't scored quiz runs,
+         * so they'd be misleading in a table of "3 / 5" results. */
+        if (attempt.mode === "review") return;
         rows.push({ module: module, attempt: attempt });
       });
     });
@@ -333,6 +336,14 @@
         el("p", "dash-note", "Showing the " + limit + " weakest of " + rows.length + " questions.")
       );
     }
+
+    // Give the table somewhere to go: these are exactly the flashcard deck.
+    const actions = el("div", "fc-actions");
+    const drill = el("a", "btn", "Drill these as flashcards");
+    drill.href = "flashcards.html";
+    actions.appendChild(drill);
+    root.appendChild(actions);
+
     return true;
   }
 
