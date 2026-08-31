@@ -110,16 +110,34 @@ function answer(id, correct) {
 // =====================================================================
 {
   const P = newProgress();
-  const t0 = new Date("2026-09-01T12:00:00.000Z");
+  /* Anchor to the REAL clock, not a fixed date. recordAttempt stamps lastSeenAt
+   * with the system clock, so a hardcoded `now` silently drifts relative to it
+   * as real time passes — this test began failing when the calendar rolled past
+   * the hardcoded date and a streak-1 card stopped being due. Any test that
+   * records and then reads must derive its read clock from the write. */
+  const t0 = new Date();
   const ids = ["sql"];
 
   // Miss sql-1 twice, sql-2 once.
   P.recordAttempt("sql", { mode: "full", score: 0, total: 2, answers: [answer("sql-1", false), answer("sql-2", false)] });
   P.recordAttempt("sql", { mode: "full", score: 1, total: 2, answers: [answer("sql-1", false), answer("sql-2", true)] });
 
+  /* sql-1 was missed twice (streak 0, always due). sql-2 was missed then
+   * answered correctly (streak 1), so the schedule correctly holds it back for
+   * a day. The previous version of this test asserted BOTH were due now and
+   * only passed because its hardcoded clock happened to sit two days in the
+   * future — it was green for the wrong reason. Assert the real behaviour. */
   let queue = P.getReviewQueue(ids, { now: t0 });
-  check("both missed questions are in the deck", queue.length === 2);
-  check("worst-first ordering: sql-1 (2 misses) leads", queue[0].questionId === "sql-1");
+  check("only the still-failing question is due right away",
+    queue.length === 1 && queue[0].questionId === "sql-1");
+
+  check("the one just answered correctly is held back, not dropped",
+    P.getReviewQueue(ids, { now: t0, includeNotDue: true }).length === 2);
+
+  const tomorrow = new Date(t0.getTime() + DAY + 1000);
+  check("it comes back a day later", P.getReviewQueue(ids, { now: tomorrow }).length === 2);
+  check("worst-first ordering: sql-1 (2 misses) leads",
+    P.getReviewQueue(ids, { now: tomorrow })[0].questionId === "sql-1");
 
   // Answer sql-1 correctly three times -> retires.
   for (let i = 0; i < 3; i++) {
@@ -174,7 +192,7 @@ function answer(id, correct) {
 // =====================================================================
 {
   const P = newProgress();
-  const t0 = new Date("2026-09-01T12:00:00.000Z");
+  const t0 = new Date(); // real clock — see the note in section 4
   P.recordAttempt("sql", { mode: "full", score: 0, total: 1, answers: [answer("sql-9", false)] });
   P.recordAttempt("oauth", { mode: "full", score: 0, total: 1, answers: [answer("oauth-1", false)] });
 

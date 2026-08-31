@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JavaScript — SkillUp</title>
-  <link rel="stylesheet" href="../css/styles.css?v=8" />
+  <link rel="stylesheet" href="../css/styles.css?v=9" />
   <!-- modules.js must load before nav.js: the nav is built from that manifest.
        Deferred scripts run in document order, so tag order guarantees it. -->
-  <script src="../js/modules.js?v=8" defer></script>
-  <script src="../js/nav.js?v=8" defer></script>
+  <script src="../js/modules.js?v=9" defer></script>
+  <script src="../js/nav.js?v=9" defer></script>
 </head>
 <body>
 
@@ -30,12 +30,641 @@
       <h1>JavaScript</h1>
     </div>
 
-    <section class="intro">
-      <h2>Overview</h2>
-      <p>JavaScript is the scripting language that runs in every web browser, making pages interactive. It also runs outside the browser via runtimes like Node.js, powering servers, tooling, and scripts.</p>
-      <p>JavaScript is dynamically typed and event-driven. Variables are declared with <code>let</code>, <code>const</code>, or the older <code>var</code>, and the language relies heavily on functions — including closures, callbacks, and arrow functions — to structure code.</p>
-      <p>Modern JavaScript handles asynchronous work with <code>Promise</code> objects and the <code>async</code>/<code>await</code> syntax, letting code wait for things like network requests without blocking the rest of the page.</p>
+    <section class="lesson">
+      <h2>Lesson</h2>
+      <p class="lesson-lede">
+        Every code block below is live — press <strong>Run</strong> and you'll see
+        what it actually prints, not what someone claims it prints. When an
+        example surprises you, that's the useful part: read the paragraph under
+        it before moving on.
+      </p>
+
+      <!-- ================= 1. Variables and scope ================= -->
+      <section class="lesson-topic">
+        <h3>1. Declaring variables: <code>let</code>, <code>const</code>, <code>var</code></h3>
+
+        <p>
+          A declaration does two things: it creates a name, and it decides
+          <em>where that name exists</em>. That second part is what trips people
+          up, because <code>let</code>/<code>const</code> and the older
+          <code>var</code> answer it differently.
+        </p>
+
+        <p>
+          A <strong>block</strong> is anything between curly braces — the body of
+          an <code>if</code>, a loop, or a bare <code>{ }</code>.
+          <code>let</code> and <code>const</code> live only inside the block they
+          were declared in. Watch what that means:
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>let message = "outer";
+
+{
+  let message = "inner";
+  console.log("inside the block:", message);
+}
+
+console.log("outside the block:", message);</code></pre>
+        </div>
+
+        <p>
+          Two separate variables that happen to share a name. The inner one is
+          created when the block starts and is gone when it ends, so the outer
+          one is untouched. Delete the word <code>let</code> from the inner line
+          and it would stop being a declaration and become an assignment to the
+          outer variable — printing <code>inner</code> both times.
+        </p>
+
+        <p>
+          <code>const</code> works the same way for scope, but adds one rule: you
+          can't point the name at something else afterwards. That is <em>not</em>
+          the same as the value being frozen, which is the most common
+          misreading:
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>const scores = [10, 20];
+
+scores.push(30);          // fine — changing what the array contains
+console.log(scores);
+
+try {
+  scores = [1, 2];        // not fine — repointing the name itself
+} catch (err) {
+  console.log("Error:", err.message);
+}</code></pre>
+        </div>
+
+        <p>
+          <code>const</code> protects the <em>binding</em>, not the contents. The
+          array is still mutable; you just can't make <code>scores</code> refer to
+          a different array. This is why <code>const</code> is a sensible default:
+          it says "this name means one thing throughout", which is true far more
+          often than not, and reaching for <code>let</code> becomes a signal that
+          something genuinely changes.
+        </p>
+
+        <p>
+          Now <code>var</code>, which is worth understanding mainly so you can
+          recognise it in older code. It ignores blocks entirely and attaches to
+          the whole surrounding <em>function</em>:
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>function withVar() {
+  if (true) {
+    var x = "declared inside the if";
+  }
+  return x;                 // still visible out here
+}
+
+function withLet() {
+  if (true) {
+    let y = "declared inside the if";
+  }
+  try {
+    return y;               // not visible — different scope
+  } catch (err) {
+    return "Error: " + err.message;
+  }
+}
+
+console.log("var: ", withVar());
+console.log("let: ", withLet());</code></pre>
+        </div>
+
+        <p>
+          <code>var</code> leaking out of the block is not a bug you can see until
+          it bites. The rule of thumb is simple:
+          <strong>use <code>const</code> by default, <code>let</code> when the
+          value genuinely changes, and <code>var</code> never</strong> in new code.
+        </p>
+      </section>
+
+      <!-- ================= 2. typeof null ================= -->
+      <section class="lesson-topic">
+        <h3>2. The <code>typeof null</code> quirk</h3>
+
+        <p>
+          <code>typeof</code> tells you what kind of value you're holding. It is
+          mostly predictable, and then there is one entry that is simply wrong:
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>console.log(typeof "hello");
+console.log(typeof 42);
+console.log(typeof true);
+console.log(typeof undefined);
+console.log(typeof { a: 1 });
+console.log(typeof [1, 2, 3]);
+console.log(typeof null);      // the odd one out</code></pre>
+        </div>
+
+        <p>
+          <code>null</code> is its own primitive type, so <code>"null"</code> would
+          be the sensible answer — but <code>typeof null</code> returns
+          <code>"object"</code>. This is a bug from the first version of
+          JavaScript in 1995 that can never be fixed: too much existing code
+          depends on the wrong answer, so correcting it would break the web.
+        </p>
+
+        <p>
+          Two practical consequences. First, <code>typeof</code> can't distinguish
+          <code>null</code> from a real object. Second, <code>typeof</code> is also
+          useless for telling an array from an object — both say
+          <code>"object"</code>. So when you actually need to check:
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>const values = [null, { a: 1 }, [1, 2], "text", undefined];
+
+values.forEach(function (value) {
+  console.log(
+    format(value),
+    "| null?", value === null,
+    "| array?", Array.isArray(value)
+  );
+});
+
+function format(v) {
+  return JSON.stringify(v) + " (typeof " + typeof v + ")";
+}</code></pre>
+        </div>
+
+        <p>
+          Compare against <code>null</code> directly with <code>===</code>, and use
+          <code>Array.isArray()</code> for arrays. Note also that
+          <code>undefined</code> and <code>null</code> are different things:
+          <code>undefined</code> usually means "never set", while <code>null</code>
+          usually means "deliberately empty".
+        </p>
+      </section>
+
+      <!-- ================= 3. JSON ================= -->
+      <section class="lesson-topic">
+        <h3>3. <code>JSON.stringify</code> and <code>JSON.parse</code></h3>
+
+        <p>
+          JSON is text. A JavaScript object lives in memory and can hold anything;
+          JSON is a string format for sending that data somewhere else — an API,
+          a file, <code>localStorage</code>. The two functions convert between
+          them, in opposite directions:
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>const user = { name: "Ada", age: 36, admin: true };
+
+const text = JSON.stringify(user);
+console.log("as text:  ", text);
+console.log("its type: ", typeof text);
+
+const back = JSON.parse(text);
+console.log("parsed:   ", back);
+console.log("age + 1:  ", back.age + 1);   // a real number again</code></pre>
+        </div>
+
+        <p>
+          Because JSON is a smaller format than JavaScript, some values have
+          nowhere to go. <code>stringify</code> doesn't warn — it quietly drops
+          them:
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>const record = {
+  name: "Ada",
+  age: undefined,           // dropped entirely
+  greet: function () {},    // dropped entirely
+  joined: new Date(0),      // survives, but as a string
+  score: null               // null is valid JSON, so it stays
+};
+
+console.log(JSON.stringify(record));</code></pre>
+        </div>
+
+        <p>
+          The date is the one to watch: it goes out as a string and comes back as
+          a string, not a <code>Date</code> — a round trip through JSON is not
+          guaranteed to give you back what you put in.
+        </p>
+
+        <p>
+          The other thing to know is how <code>parse</code> fails. It does not
+          return <code>undefined</code> or <code>null</code> on bad input; it
+          <strong>throws</strong>, which stops your code unless you catch it:
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>function safeParse(text) {
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    console.log("could not parse:", err.message);
+    return null;
+  }
+}
+
+console.log(safeParse('{"ok": true}'));
+console.log(safeParse("not json at all"));
+console.log("still running");</code></pre>
+        </div>
+
+        <p>
+          Any time the text came from outside your program — a network response,
+          a file, something a user pasted — wrap the parse in
+          <code>try</code>/<code>catch</code>. Without it one malformed response
+          takes the whole page down.
+        </p>
+      </section>
+
+      <!-- ================= 4. Closures ================= -->
+      <section class="lesson-topic">
+        <h3>4. Closures</h3>
+
+        <p>
+          Skip the definition for a moment. Here is a real problem: you want a
+          counter that hands out 1, 2, 3… and nothing else in the program can
+          interfere with it. The obvious first attempt uses a variable outside the
+          function:
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>let count = 0;
+
+function next() {
+  count = count + 1;
+  return count;
+}
+
+console.log(next());
+console.log(next());
+
+count = 900;               // anyone can do this
+console.log(next());       // counter is now wrong</code></pre>
+        </div>
+
+        <p>
+          It counts, but <code>count</code> is out in the open. Any other code
+          — a typo, a later feature, a colleague — can reach in and change it.
+          So the natural fix is to move the variable inside the function, where
+          nothing else can see it:
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>function next() {
+  let count = 0;           // now private…
+  count = count + 1;
+  return count;
+}
+
+console.log(next());
+console.log(next());
+console.log(next());       // stuck on 1 forever</code></pre>
+        </div>
+
+        <p>
+          Now it is private but useless. The variable is created fresh every call,
+          so it resets to 0 before every increment. We seem to be stuck between
+          "shared and vulnerable" and "private and forgetful".
+        </p>
+
+        <p>
+          The way out is to have <em>two</em> functions: an outer one that runs
+          once to create the variable, and an inner one that runs many times and
+          uses it.
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>function makeCounter() {
+  let count = 0;                 // created once, when makeCounter runs
+
+  return function () {           // this function is returned, not called
+    count = count + 1;
+    return count;
+  };
+}
+
+const next = makeCounter();      // runs the outer function once
+
+console.log(next());
+console.log(next());
+console.log(next());</code></pre>
+        </div>
+
+        <p>
+          <strong>That is a closure.</strong> <code>makeCounter</code> finished
+          and returned long before <code>next()</code> was ever called — yet
+          <code>count</code> is still there. A function in JavaScript doesn't just
+          remember its code; it keeps a reference to the scope it was
+          <em>created</em> in. As long as the inner function is alive,
+          <code>count</code> stays alive with it, and nothing outside can touch it
+          because there is no name for it out there.
+        </p>
+
+        <p>
+          The consequence people miss: each call to the outer function makes a
+          <em>new</em> scope, so counters made separately are genuinely separate.
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>function makeCounter() {
+  let count = 0;
+  return function () {
+    count = count + 1;
+    return count;
+  };
+}
+
+const a = makeCounter();
+const b = makeCounter();
+
+console.log("a:", a(), a(), a());
+console.log("b:", b());            // b has its own count
+console.log("a:", a());            // a carried on from where it was</code></pre>
+        </div>
+
+        <p>
+          Once you see it that way, the pattern generalises: the outer function is
+          a factory that bakes a value in, and the inner function uses it forever.
+        </p>
+
+        <div class="lesson-example" data-runnable>
+<pre class="stage-code"><code>function makeGreeter(greeting) {
+  return function (name) {
+    return greeting + ", " + name + "!";
+  };
+}
+
+const hello = makeGreeter("Hello");
+const oi = makeGreeter("Oi");
+
+console.log(hello("Ada"));
+console.log(hello("Grace"));
+console.log(oi("Ada"));</code></pre>
+        </div>
+
+        <p>
+          <code>greeting</code> was a parameter of a function that has already
+          returned. It survives because the inner function closed over it. This is
+          also, quietly, how a lot of JavaScript works — event handlers, callbacks
+          and anything you pass to <code>setTimeout</code> all rely on closing over
+          the surrounding scope.
+        </p>
+
+        <p>
+          A last one, because it connects back to section 1. This is the classic
+          <code>var</code> loop bug, and it is really a closure question:
+        </p>
+
+        <div class="lesson-example" data-runnable data-settle="600">
+<pre class="stage-code"><code>console.log("with var:");
+for (var i = 1; i &lt;= 3; i++) {
+  setTimeout(function () { console.log("  i =", i); }, 10);
+}
+
+console.log("with let:");
+for (let j = 1; j &lt;= 3; j++) {
+  setTimeout(function () { console.log("  j =", j); }, 20);
+}</code></pre>
+        </div>
+
+        <p>
+          <code>var i</code> is one variable for the whole loop, so all three
+          callbacks close over the <em>same</em> <code>i</code> — and by the time
+          they run, the loop has finished and left it at 4.
+          <code>let j</code> creates a fresh binding each iteration, so each
+          callback closes over its own copy. Same code shape, completely different
+          result, and the difference is entirely about which scope was captured.
+        </p>
+      </section>
+
+      <!-- ================= 5. Promises and async ================= -->
+      <section class="lesson-topic">
+        <h3>5. Promises and <code>async</code>/<code>await</code></h3>
+
+        <p>
+          Start with the surprise, because everything else follows from it.
+          JavaScript runs one thing at a time. Anything that has to wait —
+          a network request, a timer — is handed off, and your code carries
+          straight on:
+        </p>
+
+        <div class="lesson-example" data-runnable data-settle="600">
+<pre class="stage-code"><code>console.log("1. first line");
+
+setTimeout(function () {
+  console.log("3. inside setTimeout, 0ms");
+}, 0);
+
+console.log("2. last line");</code></pre>
+        </div>
+
+        <p>
+          <code>0</code> milliseconds and it still runs last. "0ms" doesn't mean
+          "now", it means "as soon as the current work is finished". Everything
+          synchronous runs to completion first — <em>then</em> the queued
+          callbacks. If you take one thing from this section, take that.
+        </p>
+
+        <p>
+          So how do you use a value that hasn't arrived yet? The old answer was to
+          pass a function to be called later. That works, but it nests — here are
+          three dependent steps:
+        </p>
+
+        <div class="lesson-example" data-runnable data-settle="900">
+<pre class="stage-code"><code>function getUser(id, callback) {
+  setTimeout(function () { callback({ id: id, name: "Ada" }); }, 100);
+}
+function getOrders(user, callback) {
+  setTimeout(function () { callback(["a", "b", "c"]); }, 100);
+}
+function getTotal(orders, callback) {
+  setTimeout(function () { callback(orders.length * 25); }, 100);
+}
+
+getUser(1, function (user) {
+  getOrders(user, function (orders) {
+    getTotal(orders, function (total) {
+      console.log(user.name + " spent " + total);
+    });
+  });
+});</code></pre>
+        </div>
+
+        <p>
+          Three steps, three levels of indentation, and the actual result is
+          buried at the bottom. Add error handling to each step and it roughly
+          doubles. This shape has a name — "callback hell" — and it's what
+          promises were introduced to fix.
+        </p>
+
+        <p>
+          A <strong>promise</strong> is an object representing a value that isn't
+          ready yet. Instead of taking a callback, the function
+          <em>returns</em> the promise, and you attach what happens next with
+          <code>.then()</code>:
+        </p>
+
+        <div class="lesson-example" data-runnable data-settle="900">
+<pre class="stage-code"><code>function getUser(id) {
+  return new Promise(function (resolve) {
+    setTimeout(function () { resolve({ id: id, name: "Ada" }); }, 100);
+  });
+}
+function getOrders(user) {
+  return new Promise(function (resolve) {
+    setTimeout(function () { resolve(["a", "b", "c"]); }, 100);
+  });
+}
+function getTotal(orders) {
+  return new Promise(function (resolve) {
+    setTimeout(function () { resolve(orders.length * 25); }, 100);
+  });
+}
+
+getUser(1)
+  .then(function (user) {
+    console.log("got user:", user.name);
+    return getOrders(user);        // returning a promise chains it
+  })
+  .then(function (orders) {
+    console.log("got orders:", orders.length);
+    return getTotal(orders);
+  })
+  .then(function (total) {
+    console.log("total:", total);
+  });</code></pre>
+        </div>
+
+        <p>
+          The same three steps, but flat instead of nested. The trick is the
+          <code>return</code> inside each <code>.then()</code>: returning a promise
+          makes the next <code>.then()</code> wait for it. Forget that
+          <code>return</code> and the chain stops waiting — one of the most common
+          promise bugs.
+        </p>
+
+        <p>
+          <code>async</code>/<code>await</code> is a different syntax for exactly
+          the same promises. <code>await</code> pauses the function until the
+          promise settles and hands you the value directly:
+        </p>
+
+        <div class="lesson-example" data-runnable data-settle="900">
+<pre class="stage-code"><code>function delay(ms, value) {
+  return new Promise(function (resolve) {
+    setTimeout(function () { resolve(value); }, ms);
+  });
+}
+
+async function run() {
+  const user = await delay(100, { name: "Ada" });
+  console.log("got user:", user.name);
+
+  const orders = await delay(100, ["a", "b", "c"]);
+  console.log("got orders:", orders.length);
+
+  const total = await delay(100, orders.length * 25);
+  console.log("total:", total);
+}
+
+run();
+console.log("(this line runs before any of the above)");</code></pre>
+        </div>
+
+        <p>
+          It reads top to bottom like ordinary code, which is the whole point —
+          but note the last line. <code>await</code> only pauses the function it is
+          inside; the rest of the program keeps going. That's also why
+          <code>await</code> is only allowed inside an <code>async</code> function.
+        </p>
+
+        <p>
+          Errors follow the same split. A promise that fails is
+          <em>rejected</em>, caught with <code>.catch()</code> — or, with
+          <code>await</code>, by ordinary <code>try</code>/<code>catch</code>:
+        </p>
+
+        <div class="lesson-example" data-runnable data-settle="900">
+<pre class="stage-code"><code>function mightFail(shouldFail) {
+  return new Promise(function (resolve, reject) {
+    setTimeout(function () {
+      if (shouldFail) reject(new Error("server said no"));
+      else resolve("all good");
+    }, 100);
+  });
+}
+
+mightFail(false).then(function (msg) { console.log(".then:", msg); });
+
+mightFail(true).catch(function (err) { console.log(".catch:", err.message); });
+
+async function withAwait() {
+  try {
+    await mightFail(true);
+  } catch (err) {
+    console.log("try/catch:", err.message);
+  }
+}
+withAwait();</code></pre>
+        </div>
+
+        <p>
+          A rejected promise with no <code>.catch()</code> and no surrounding
+          <code>try</code>/<code>catch</code> becomes an "unhandled rejection" — it
+          won't crash the page, but the error goes to the browser console where
+          you may never look. Always handle the failing branch.
+        </p>
+
+        <p>
+          Last one, and it is the most useful in practice. Two
+          <code>await</code>s in a row run <em>one after the other</em>, even when
+          the tasks don't depend on each other. If they're independent, start them
+          both and wait together:
+        </p>
+
+        <div class="lesson-example" data-runnable data-settle="1200">
+<pre class="stage-code"><code>function delay(ms, value) {
+  return new Promise(function (resolve) {
+    setTimeout(function () { resolve(value); }, ms);
+  });
+}
+
+async function oneAtATime() {
+  const start = Date.now();
+  const a = await delay(200, "a");
+  const b = await delay(200, "b");
+  console.log("sequential:", a + b, "took about", Date.now() - start, "ms");
+}
+
+async function together() {
+  const start = Date.now();
+  const both = await Promise.all([delay(200, "a"), delay(200, "b")]);
+  console.log("Promise.all:", both.join(""), "took about", Date.now() - start, "ms");
+}
+
+oneAtATime();
+together();</code></pre>
+        </div>
+
+        <p>
+          Roughly 400ms versus roughly 200ms for the same work.
+          <code>Promise.all</code> starts everything immediately and resolves once
+          all of them are done. Use sequential <code>await</code> only when a step
+          genuinely needs the previous step's result — as in the user → orders →
+          total chain above.
+        </p>
+
+        <p class="lesson-note">
+          One more piece of ordering, since it comes up: promise callbacks jump the
+          queue ahead of timers. Given a <code>setTimeout(…, 0)</code> and a
+          <code>Promise.resolve().then(…)</code> registered together, the promise
+          callback always runs first. Synchronous code, then promises, then timers.
+        </p>
+      </section>
     </section>
+
 
     <section class="quiz-section">
       <h2>Practice</h2>
@@ -49,9 +678,10 @@
   </footer>
 
   <!-- Load order matters: storage layer, then engine, then this module's data. -->
-  <script src="../js/progress.js?v=8"></script>
-  <script src="../js/stages.js?v=8"></script>
-  <script src="../js/data/javascript.js?v=8"></script>
+  <script src="../js/progress.js?v=9"></script>
+  <script src="../js/lesson.js?v=9" defer></script>
+  <script src="../js/stages.js?v=9"></script>
+  <script src="../js/data/javascript.js?v=9"></script>
   <script>
     initStages("stages", "javascript");
   </script>
