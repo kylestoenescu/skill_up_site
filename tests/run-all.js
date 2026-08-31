@@ -19,6 +19,7 @@ const SUITES = [
   ["test-modules.js", "module manifest matches the files on disk"],
   ["test-progress.js", "progress.js storage layer"],
   ["test-quiz.js", "quiz.js engine, shuffling and grading"],
+  ["test-stages.js", "three-stage JavaScript module: gating and per-stage scoring"],
   ["test-nav.js", "nav.js paths and page wiring"],
   ["test-flashcards.js", "flashcard scheduling and review recording"],
   ["test-cache-busting.js", "asset version stamps (stale-cache guard)"]

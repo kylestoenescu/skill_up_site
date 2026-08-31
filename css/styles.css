@@ -192,52 +192,12 @@ main {
   flex: none;
 }
 
-.module-card .badge {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  font-size: 0.95rem;
-}
-
-.module-card h2 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-
-.module-card p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.92rem;
-}
-
-/* Per-module progress line on a tile, written by js/home.js. `margin-top: auto`
-   moves down to .go, so the status sits directly under the blurb and the
-   "Start module" link stays pinned to the bottom of every card regardless of
-   how long the blurb is. */
-.module-status {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.module-status.is-mastered {
-  color: var(--success);
-}
-
 .module-card .go {
   margin-top: auto;
   padding-top: 4px;
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--accent);
-}
-
-.home-dash-link {
-  margin: 28px 0 0;
-  text-align: center;
-  font-weight: 600;
-  font-size: 0.95rem;
 }
 
 /* ==========================================================================
@@ -563,6 +523,463 @@ main {
     flex-direction: column;
     gap: 2px;
   }
+}
+
+/* ==========================================================================
+   home module cards — status layer (js/home.js)
+
+   Three states, each carried by colour AND a text label AND the bar, so the
+   state is never colour-only:
+     .is-none      not started    grey, empty track
+     .is-progress  attempted      blue, partial bar
+     .is-mastered  >= 80%         green, full bar + badge
+   ========================================================================== */
+
+.module-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.module-card-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.module-card .badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+}
+
+.module-blurb {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.module-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: auto; /* pin the status block to the bottom of the card */
+  padding-top: 4px;
+}
+
+.module-status {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.module-card.is-progress .module-status {
+  color: var(--accent-dark);
+}
+
+.module-card.is-mastered .module-status {
+  color: var(--success);
+}
+
+.module-meter {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.module-meter-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+}
+
+.module-card.is-progress .module-meter {
+  background: var(--accent-soft);
+}
+
+.module-card.is-mastered .module-meter {
+  background: var(--success-soft);
+}
+
+.module-card.is-mastered .module-meter-fill {
+  background: var(--success);
+}
+
+.module-when {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.module-when-empty {
+  opacity: 0.7;
+}
+
+/* Backward-looking pointer: rises when things go stale, unlike a completion
+   bar which only ever rises when you start something new. */
+.home-review {
+  margin: 0 0 20px;
+  text-align: center;
+}
+
+.home-review-link {
+  display: inline-block;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.home-review-link:hover {
+  text-decoration: none;
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ==========================================================================
+   staged modules (js/stages.js)
+   ========================================================================== */
+
+.stage-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.stage-tab {
+  appearance: none;
+  font-family: inherit;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stage-tab:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.stage-tab.is-active {
+  border-left-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.stage-tab.is-mastered {
+  border-left-color: var(--success);
+}
+
+.stage-tab.is-locked {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background: transparent;
+}
+
+.stage-tab-step {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.stage-tab-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.stage-tab-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.stage-tab.is-mastered .stage-tab-meta {
+  color: var(--success);
+}
+
+.stage-panel {
+  background: transparent;
+}
+
+.stage-heading {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+}
+
+.stage-blurb {
+  margin: 0 0 20px;
+  color: var(--text-muted);
+  max-width: 640px;
+}
+
+.stage-locked {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.stage-locked p {
+  margin: 0;
+}
+
+/* Code snippets inside a question. `pre` keeps the authored newlines; the
+   horizontal scroll stops a long line widening the whole card. */
+.stage-code {
+  background: #1b2030;
+  color: #e8ecf7;
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin: 0 0 14px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.stage-code code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+  white-space: pre;
+}
+
+.stage-result {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-top: 20px;
+}
+
+.stage-result.is-pass {
+  border-left-color: var(--success);
+  background: var(--success-soft);
+}
+
+.stage-result.is-fail {
+  border-left-color: var(--error);
+  background: var(--error-soft);
+}
+
+.stage-result-score {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.stage-result-note {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.stage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* ---------- parsons ---------- */
+
+.parsons-puzzle {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+
+.parsons-prompt {
+  margin: 0 0 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.parsons-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.parsons-lines.is-correct {
+  border-color: var(--success);
+}
+
+.parsons-lines.is-incorrect {
+  border-color: var(--error);
+}
+
+.parsons-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 8px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.parsons-line:last-child {
+  border-bottom: none;
+}
+
+.parsons-code {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  background: none;
+  color: var(--text);
+  padding: 0;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.parsons-controls {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+/* Plain buttons on purpose — keyboard-operable and screen-reader-announced
+   with no extra work, unlike drag handles. See the note in js/stages.js. */
+.parsons-move {
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.parsons-move:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.parsons-move:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.parsons-answer {
+  margin-top: 12px;
+}
+
+/* ---------- free write ---------- */
+
+.free-task {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+
+.free-prompt {
+  margin: 0 0 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.free-label {
+  display: block;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.free-input {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+}
+
+.free-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.free-expected {
+  margin: 12px 0;
+  font-size: 0.9rem;
+}
+
+.free-expected-label {
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.free-answer-label {
+  margin: 16px 0 8px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.free-hints {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+.free-hints li {
+  margin-bottom: 4px;
+}
+
+.free-selfmark-q {
+  margin: 14px 0 8px;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.free-selfmark {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.free-selfmark .btn.is-chosen {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
 }
 
 /* ==========================================================================

@@ -50,7 +50,13 @@ function report(label) {
 }
 
 const sb0 = newSandbox();
-const DATA_KEYS = Object.keys(sb0.QUIZ_DATA);
+/* The JavaScript module is a gated three-stage progression driven by
+ * js/stages.js, not js/quiz.js, so it is not exercised here — tests/test-stages.js
+ * covers it. Everything with a flat `questions` list and no `stages` is a
+ * quiz.js module. */
+const DATA_KEYS = Object.keys(sb0.QUIZ_DATA).filter(function (k) {
+  return !Array.isArray(sb0.QUIZ_DATA[k].stages);
+});
 console.log("data files loaded: " + DATA_KEYS.join(", ") + "\n");
 
 /* Mount a quiz into a fresh container and return it. */
@@ -310,7 +316,7 @@ DATA_KEYS.forEach((key) => {
   });
   check(key + ": has a moduleId", typeof sb0.QUIZ_DATA[key].moduleId === "string");
 });
-const allIds = DATA_KEYS.flatMap((k) => sb0.QUIZ_DATA[k].questions.map((q) => q.id));
+const allIds = Object.keys(sb0.QUIZ_DATA).flatMap((k) => sb0.QUIZ_DATA[k].questions.map((q) => q.id));
 check("all question ids unique site-wide", new Set(allIds).size === allIds.length);
 report("data files: no leading spaces, unique ids, valid correctIndex (" + allIds.length + " questions)");
 

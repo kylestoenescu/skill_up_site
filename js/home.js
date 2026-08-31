@@ -1,105 +1,195 @@
 /*
- * home.js — builds the module tiles on the home page from the manifest.
+ * home.js — the module grid on index.html, with a live status layer.
  *
- * Before this, the seven tiles were hand-written in index.html and the same
- * seven modules were listed again in the nav. They're now both generated from
- * js/modules.js, so they cannot disagree.
+ * ---------------------------------------------------------------------------
+ * WHAT THIS SHOWS, AND WHAT IT DELIBERATELY DOESN'T
+ * ---------------------------------------------------------------------------
+ * Every card carries one of three states, and never anything in between:
  *
- * If progress.js is present, each tile also gets a short status line ("Best:
- * 4/5", "Mastered", "Not started"). That is deliberately a one-line summary and
- * not a dashboard — the dashboard is its own page, later. It reads through the
- * Progress API like everything else; this file never touches localStorage.
+ *   not started   no attempt recorded      grey, empty track
+ *   in progress   attempted, under 80%     blue, partial bar
+ *   mastered      best attempt >= 80%      green, full bar + badge
  *
- * TRADEOFF (same one as the nav, extended)
- * The tiles now require JavaScript. With JS off, the home page previously still
- * listed the modules, which was the fallback that made the nav's <noscript>
- * acceptable. That's gone, so index.html now carries an honest <noscript>
- * saying the site needs JavaScript. That is the truthful position anyway: the
- * quizzes have never worked without it.
+ * The state is carried by colour AND by a text label AND by the bar, so it is
+ * never colour alone — that matters for anyone who can't distinguish the blue
+ * from the green, and it is why the label is not decoration.
+ *
+ * There is NO overall "you have completed 43% of the site" bar, on purpose. A
+ * global completion meter rewards racing to the end: it goes up when you touch
+ * something new and never when you go back and fix something you half-knew.
+ * Status plus "last attempted 9 days ago" points at what is going stale, which
+ * is the thing actually worth doing next. The one aggregate number here is a
+ * count of cards due for review, which points backwards rather than forwards.
+ *
+ * ---------------------------------------------------------------------------
+ * STAGED MODULES
+ * ---------------------------------------------------------------------------
+ * Most modules are one quiz, so "best score" is unambiguous. The JavaScript
+ * module is three gated stages, and a single best score across them would be
+ * meaningless — 6/6 on the trace stage is not 6/6 on the module. For those,
+ * the card reports stages passed ("2 of 3 stages") and is only mastered when
+ * every stage is. js/modules.js decides which modules are staged.
  */
 
 (function () {
   "use strict";
 
-  /* Same trick as nav.js: work out the site root from this script's own URL, so
-   * the generated links are correct regardless of where the page lives. The
-   * home page is always at the root today, but deriving it costs nothing and
-   * stops this breaking if the page ever moves. */
-  /* `*=` not `$=`: script URLs carry a cache-busting query string
-   * (js/home.js?v=3). See tools/bump-assets.js. */
   const thisScript =
     document.currentScript || document.querySelector('script[src*="js/home.js"]');
   const SITE_ROOT = thisScript ? thisScript.src.replace(/js\/home\.js(\?.*)?$/, "") : "";
 
-  /**
-   * Builds the short progress line shown on a tile.
-   * @param {string} moduleId
-   * @returns {{text: string, mastered: boolean}|null} null when there's no
-   *          progress layer at all, so the caller can omit the line entirely
-   */
-  function progressLineFor(moduleId) {
-    if (typeof window.Progress === "undefined") return null;
-
-    const summary = window.Progress.getModuleSummary(moduleId);
-
-    if (summary.bestScore === null) {
-      return { text: "Not started", mastered: false };
-    }
-
-    const percent = Math.round(summary.bestPercent * 100);
-    return {
-      text: "Best " + summary.bestScore + "/" + summary.bestTotal + " (" + percent + "%)",
-      mastered: summary.mastered
-    };
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined && text !== null) node.textContent = String(text);
+    return node;
   }
 
   /**
-   * @param {object} module an entry from SITE_MODULES
-   * @returns {HTMLAnchorElement}
+   * Recency in words. "11 days ago" answers "is this going stale?" far more
+   * directly than a date does; the exact timestamp goes in the tooltip for
+   * when you want it.
+   * @param {string} iso
+   * @returns {string}
    */
-  function buildTile(module) {
-    const card = document.createElement("a");
-    card.className = "module-card";
-    card.href = SITE_ROOT + window.SiteModules.pageFor(module);
+  function relativeDate(iso) {
+    const then = new Date(iso);
+    if (isNaN(then.getTime())) return "";
 
-    const badge = document.createElement("span");
-    badge.className = "badge";
-    badge.textContent = module.badge;
+    const days = Math.floor((Date.now() - then.getTime()) / 86400000);
+    if (days <= 0) return "today";
+    if (days === 1) return "yesterday";
+    if (days < 30) return days + " days ago";
+    const months = Math.round(days / 30);
+    return months === 1 ? "a month ago" : months + " months ago";
+  }
 
-    const heading = document.createElement("h2");
-    heading.textContent = module.title;
+  function absoluteDate(iso) {
+    const date = new Date(iso);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  }
 
-    const blurb = document.createElement("p");
-    blurb.textContent = module.blurb;
+  /**
+   * Works out a module's single unambiguous state, plus the numbers to show.
+   * All three states are decided here so the bar, the label and the colour can
+   * never disagree with each other.
+   *
+   * @param {object} module a manifest entry
+   * @returns {{state:string, label:string, fraction:number, lastAttempt:object|null}}
+   */
+  function statusFor(module) {
+    const Progress = window.Progress;
+    const stages = window.SiteModules.stagesFor(module);
 
-    card.appendChild(badge);
-    card.appendChild(heading);
-    card.appendChild(blurb);
+    if (stages) {
+      const gates = Progress.getStageGates(module.id, stages);
+      const passed = gates.filter(function (g) { return g.mastered; }).length;
 
-    const progress = progressLineFor(module.id);
-    if (progress) {
-      const status = document.createElement("p");
-      status.className = "module-status";
-      status.textContent = progress.text;
+      // Newest attempt across every stage.
+      let last = null;
+      gates.forEach(function (g) {
+        const attempt = g.summary.lastAttempt;
+        if (attempt && (!last || attempt.completedAt > last.completedAt)) last = attempt;
+      });
 
-      if (progress.mastered) {
-        status.classList.add("is-mastered");
-        const badgeEl = document.createElement("span");
-        badgeEl.className = "mastery-badge";
-        badgeEl.textContent = "Mastered";
-        status.textContent = progress.text + " ";
-        status.appendChild(badgeEl);
+      if (!last) {
+        return { state: "none", label: "Not started", fraction: 0, lastAttempt: null };
       }
-
-      card.appendChild(status);
+      return {
+        state: passed === stages.length ? "mastered" : "progress",
+        label: passed + " of " + stages.length + " stages",
+        fraction: passed / stages.length,
+        lastAttempt: last
+      };
     }
 
-    const go = document.createElement("span");
-    go.className = "go";
-    go.textContent = "Start module →";
-    card.appendChild(go);
+    const summary = Progress.getModuleSummary(module.id);
+    if (summary.bestScore === null) {
+      return { state: "none", label: "Not started", fraction: 0, lastAttempt: null };
+    }
+    return {
+      state: summary.mastered ? "mastered" : "progress",
+      label: "Best " + summary.bestScore + "/" + summary.bestTotal +
+        " (" + Math.round(summary.bestPercent * 100) + "%)",
+      fraction: summary.bestPercent,
+      lastAttempt: summary.lastAttempt
+    };
+  }
 
+  /** @param {object} module @returns {HTMLAnchorElement} */
+  function buildCard(module) {
+    const card = el("a", "module-card");
+    card.href = SITE_ROOT + window.SiteModules.pageFor(module);
+
+    const head = el("div", "module-card-head");
+    head.appendChild(el("span", "badge", module.badge));
+    head.appendChild(el("h2", null, module.title));
+    card.appendChild(head);
+
+    card.appendChild(el("p", "module-blurb", module.blurb));
+
+    // Status block. Absent entirely when there's no progress layer at all.
+    if (typeof window.Progress !== "undefined") {
+      const status = statusFor(module);
+      card.classList.add("is-" + status.state);
+
+      const row = el("div", "module-status-row");
+
+      const label = el("span", "module-status", status.label);
+      row.appendChild(label);
+
+      if (status.state === "mastered") {
+        row.appendChild(el("span", "mastery-badge", "Mastered"));
+      }
+      card.appendChild(row);
+
+      /* The bar is a second, redundant channel for the same state — useful at a
+       * glance, never the only way to read it. */
+      const meter = el("div", "module-meter");
+      meter.setAttribute("role", "progressbar");
+      meter.setAttribute("aria-valuemin", "0");
+      meter.setAttribute("aria-valuemax", "100");
+      meter.setAttribute("aria-valuenow", String(Math.round(status.fraction * 100)));
+      meter.setAttribute("aria-label", module.title + " progress");
+      const fill = el("div", "module-meter-fill");
+      fill.style.width = Math.round(status.fraction * 100) + "%";
+      meter.appendChild(fill);
+      card.appendChild(meter);
+
+      if (status.lastAttempt) {
+        const when = el("p", "module-when", "Last attempt " + relativeDate(status.lastAttempt.completedAt));
+        when.title = absoluteDate(status.lastAttempt.completedAt);
+        card.appendChild(when);
+      } else {
+        card.appendChild(el("p", "module-when module-when-empty", "No attempts yet"));
+      }
+    }
+
+    card.appendChild(el("span", "go", "Open module →"));
     return card;
+  }
+
+  /**
+   * A single backward-looking pointer: how much is waiting to be reviewed.
+   * Counting due cards is the opposite incentive to a completion bar — it goes
+   * UP when you neglect things, not when you finish them.
+   */
+  function renderReviewPointer() {
+    const root = document.querySelector("[data-home-review]");
+    if (!root || typeof window.Progress === "undefined") return;
+
+    const due = window.Progress.getReviewQueue(window.SiteModules.ids());
+    if (due.length === 0) return;
+
+    root.textContent = "";
+    const link = el("a", "home-review-link");
+    link.href = SITE_ROOT + "flashcards.html";
+    link.textContent =
+      due.length + (due.length === 1 ? " question is" : " questions are") +
+      " due for review →";
+    root.appendChild(link);
+    root.hidden = false;
   }
 
   function init() {
@@ -113,13 +203,29 @@
 
     grid.textContent = "";
     window.SiteModules.all().forEach(function (module) {
-      grid.appendChild(buildTile(module));
+      grid.appendChild(buildCard(module));
     });
+
+    renderReviewPointer();
+
+    if (typeof window.Progress !== "undefined" && !window.Progress.isAvailable()) {
+      const warning = document.querySelector("[data-home-storage-warning]");
+      if (warning) warning.hidden = false;
+    }
+  }
+
+  /* Staged modules need question data? No — statusFor() reads scores only, which
+   * live in progress.js. But the review pointer counts cards, and the flashcard
+   * deck resolves text from the data files, so wait for the loader when it's
+   * present to keep the count consistent with what the deck will actually show. */
+  function start() {
+    if (window.SiteData) window.SiteData.loadAll().then(init);
+    else init();
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+    document.addEventListener("DOMContentLoaded", start);
   } else {
-    init();
+    start();
   }
 })();

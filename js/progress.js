@@ -250,6 +250,7 @@
             id: typeof attempt.id === "string" ? attempt.id : makeId(),
             completedAt: typeof attempt.completedAt === "string" ? attempt.completedAt : null,
             mode: normaliseMode(attempt.mode),
+            stage: typeof attempt.stage === "string" ? attempt.stage : null,
             score: attempt.score,
             total: attempt.total,
             answers: Array.isArray(attempt.answers) ? attempt.answers.filter(isPlainObject) : []
@@ -406,6 +407,7 @@
         id: makeId(),
         completedAt: nowISO(),
         mode: normaliseMode(attempt && attempt.mode),
+        stage: attempt && typeof attempt.stage === "string" ? attempt.stage : null,
         score: numberOr(attempt && attempt.score, 0),
         total: numberOr(attempt && attempt.total, 0),
         answers: Array.isArray(attempt && attempt.answers) ? attempt.answers : []
@@ -457,9 +459,19 @@
      *   bestScore:number|null, bestTotal:number|null, bestPercent:number|null,
      *   mastered:boolean, lastAttempt:object|null}}
      */
-    getModuleSummary: function (moduleId) {
+    getModuleSummary: function (moduleId, options) {
       const bucket = readStore().modules[moduleId];
-      const attempts = bucket ? bucket.attempts : [];
+      let attempts = bucket ? bucket.attempts : [];
+
+      /* A multi-stage module (see js/modules.js `stages`) records each stage
+       * separately. Without this filter all three stages would share one
+       * bestScore, so passing the 6-question trace stage would look like
+       * mastery of the whole module. Modules with a single stage store
+       * stage:null and are unaffected. */
+      const stage = options && options.stage;
+      if (stage) {
+        attempts = attempts.filter(function (a) { return a.stage === stage; });
+      }
 
       // Only full attempts are eligible for "best" and mastery.
       const fullAttempts = attempts.filter(function (a) {
@@ -481,6 +493,7 @@
 
       return {
         moduleId: moduleId,
+        stage: stage || null,
         attemptCount: quizAttempts.length,
         reviewCount: attempts.length - quizAttempts.length,
         fullAttemptCount: fullAttempts.length,
@@ -600,6 +613,68 @@
         .map(function (id) {
           return { questionId: id, stat: stats[id] };
         });
+    },
+
+    // --- multi-stage modules ----------------------------------------------
+
+    /**
+     * Per-stage summaries for a staged module, in the order given.
+     *
+     * @param {string} moduleId
+     * @param {string[]} stageIds e.g. ["trace", "parsons", "free"]
+     * @returns {Array<object>} one getModuleSummary result per stage
+     */
+    getStageSummaries: function (moduleId, stageIds) {
+      const self = this;
+      return (stageIds || []).map(function (stage) {
+        return self.getModuleSummary(moduleId, { stage: stage });
+      });
+    },
+
+    /**
+     * Which stages are unlocked, given that each one gates the next.
+     *
+     * Stage 1 is always open; stage N opens once stage N-1 is mastered. The
+     * gate is computed here rather than stored, so it can never drift out of
+     * sync with the scores it's derived from — and clearing progress
+     * automatically re-locks the later stages.
+     *
+     * @param {string} moduleId
+     * @param {string[]} stageIds
+     * @returns {Array<{stage:string, unlocked:boolean, mastered:boolean, summary:object}>}
+     */
+    getStageGates: function (moduleId, stageIds) {
+      const summaries = this.getStageSummaries(moduleId, stageIds);
+      let previousMastered = true; // the first stage has nothing before it
+
+      return (stageIds || []).map(function (stage, i) {
+        const summary = summaries[i];
+        const gate = {
+          stage: stage,
+          unlocked: previousMastered,
+          mastered: summary.mastered,
+          summary: summary
+        };
+        previousMastered = summary.mastered;
+        return gate;
+      });
+    },
+
+    /**
+     * A staged module is mastered only when EVERY stage is mastered — passing
+     * the first stage is not passing the module.
+     *
+     * @param {string} moduleId
+     * @param {string[]} [stageIds] omit for a single-stage module
+     * @returns {boolean}
+     */
+    isModuleMastered: function (moduleId, stageIds) {
+      if (!stageIds || stageIds.length === 0) {
+        return this.getModuleSummary(moduleId).mastered;
+      }
+      return this.getStageSummaries(moduleId, stageIds).every(function (s) {
+        return s.mastered;
+      });
     },
 
     // --- flashcard review scheduling --------------------------------------

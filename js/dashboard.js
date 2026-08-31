@@ -1,5 +1,14 @@
 /*
- * dashboard.js — renders the progress dashboard.
+ * dashboard.js — the two history tables on the home page.
+ *
+ * Previously this rendered a whole separate dashboard.html, including a hero
+ * figure and a per-module meter list. Those moved: the per-module status now
+ * lives on the home page's module cards (js/home.js), and the "N of 7 modules
+ * mastered" hero was dropped on purpose — a global completion count rewards
+ * racing through content, which is the opposite of what this site is for.
+ *
+ * What's left here is the backward-looking history: what you attempted recently
+ * and which questions you keep missing.
  *
  * ---------------------------------------------------------------------------
  * WHERE THE DATA COMES FROM
@@ -16,22 +25,11 @@
  *   Progress.getMasteredQuestions()    questions you've nailed repeatedly
  *
  * ---------------------------------------------------------------------------
- * WHY IT LOOKS THE WAY IT DOES
+ * WHY BOTH ARE TABLES
  * ---------------------------------------------------------------------------
- * A few deliberate choices, so you can push back on them:
- *
- * - There is exactly ONE hero number (modules mastered). A dashboard that
- *   leads with six equally-large numbers has no lead at all.
- * - Per-module scores are horizontal meters, not a chart. The labels are long
- *   ("REST APIs", "JavaScript") and horizontal bars give text room to breathe.
- * - Recent attempts and weak questions are TABLES, not charts. With three or
- *   four irregularly-spaced attempts, a line chart draws a trend that isn't
- *   really there. When data is sparse, a table is the honest form.
- * - Meter colour encodes STATUS (mastered / in progress / not started), never
- *   the value. Colouring a bar darker because it's longer double-encodes the
- *   same fact and wastes the only free channel.
- * - Every meter is accompanied by its number in text, so the colour is never
- *   the only way to read it.
+ * With three or four irregularly-spaced attempts, a line chart draws a trend
+ * that isn't in the data. When data is this sparse a table is the honest form,
+ * and it stays readable as the log grows.
  */
 
 (function () {
@@ -76,141 +74,10 @@
     return Math.round(fraction * 100) + "%";
   }
 
-  /**
-   * Classifies a module for display. This is the only place the three states
-   * are decided, so the meter, the label and the colour can never disagree.
-   * @param {object} summary from Progress.getModuleSummary
-   * @returns {{state: "mastered"|"progress"|"none", label: string, fraction: number}}
-   */
-  function classify(summary) {
-    if (summary.bestScore === null) {
-      return { state: "none", label: "Not started", fraction: 0 };
-    }
-    const label = summary.bestScore + " / " + summary.bestTotal + " (" + percent(summary.bestPercent) + ")";
-    return {
-      state: summary.mastered ? "mastered" : "progress",
-      label: label,
-      fraction: summary.bestPercent
-    };
-  }
 
   // --- sections ------------------------------------------------------------
 
-  /**
-   * The hero figure plus three supporting stat tiles.
-   * Hero = the single number the page leads with. Everything else is support.
-   */
-  function renderSummary(root, modules, summaries) {
-    const masteredCount = summaries.filter(function (s) { return s.mastered; }).length;
 
-    const totalAttempts = summaries.reduce(function (sum, s) {
-      return sum + s.attemptCount;
-    }, 0);
-
-    // Per-question rollups across every module.
-    let masteredQuestions = 0;
-    let reviewQuestions = 0;
-    modules.forEach(function (m) {
-      masteredQuestions += window.Progress.getMasteredQuestions(m.id, { minStreak: 3 }).length;
-      reviewQuestions += window.Progress.getStrugglingQuestions(m.id).length;
-    });
-
-    // --- hero ---
-    const hero = el("div", "dash-hero");
-    hero.appendChild(el("p", "dash-hero-value", masteredCount));
-    hero.appendChild(
-      el("p", "dash-hero-label", "of " + modules.length + " modules mastered")
-    );
-    hero.appendChild(
-      el(
-        "p",
-        "dash-hero-sub",
-        "A module is mastered at " + percent(masteryThreshold()) + " or better on a full attempt."
-      )
-    );
-    root.appendChild(hero);
-
-    // --- supporting tiles ---
-    const tiles = el("div", "dash-tiles");
-    [
-      { label: "Quiz attempts", value: totalAttempts },
-      { label: "Questions mastered", value: masteredQuestions },
-      { label: "Questions to review", value: reviewQuestions }
-    ].forEach(function (tile) {
-      const node = el("div", "dash-tile");
-      node.appendChild(el("p", "dash-tile-value", tile.value));
-      node.appendChild(el("p", "dash-tile-label", tile.label));
-      tiles.appendChild(node);
-    });
-    root.appendChild(tiles);
-  }
-
-  /**
-   * One row per module: badge, name, meter, and the score in plain text.
-   *
-   * The meter is a <div role="progressbar"> rather than a native <progress>
-   * element, because <progress> is close to unstylable across browsers. The
-   * ARIA attributes give screen readers the same value the bar shows visually.
-   */
-  function renderModules(root, modules, summaries) {
-    const list = el("div", "dash-modules");
-
-    modules.forEach(function (module, i) {
-      const summary = summaries[i];
-      const status = classify(summary);
-
-      const row = el("a", "dash-row");
-      row.href = window.SiteModules.pageFor(module);
-
-      /* Native tooltip on hover — extra detail without a tooltip library.
-       * Everything in here is ALSO visible on the page, so the tooltip only
-       * enhances; it never hides a value behind a hover. */
-      row.title =
-        module.title + " — " + status.label +
-        "\nAttempts: " + summary.attemptCount +
-        (summary.lastAttempt ? "\nLast: " + formatDate(summary.lastAttempt.completedAt) : "");
-
-      const badge = el("span", "badge", module.badge);
-
-      const body = el("div", "dash-row-body");
-
-      const head = el("div", "dash-row-head");
-      head.appendChild(el("span", "dash-row-title", module.title));
-      head.appendChild(el("span", "dash-row-value", status.label));
-      body.appendChild(head);
-
-      // The meter itself.
-      const meter = el("div", "dash-meter is-" + status.state);
-      meter.setAttribute("role", "progressbar");
-      meter.setAttribute("aria-valuemin", "0");
-      meter.setAttribute("aria-valuemax", "100");
-      meter.setAttribute("aria-valuenow", String(Math.round(status.fraction * 100)));
-      meter.setAttribute("aria-label", module.title + " best score");
-
-      const fill = el("div", "dash-meter-fill");
-      fill.style.width = Math.round(status.fraction * 100) + "%";
-      meter.appendChild(fill);
-      body.appendChild(meter);
-
-      const foot = el("div", "dash-row-foot");
-      foot.appendChild(
-        el("span", "dash-row-meta",
-          summary.attemptCount === 0
-            ? "No attempts yet"
-            : summary.attemptCount + (summary.attemptCount === 1 ? " attempt" : " attempts"))
-      );
-      if (summary.mastered) {
-        foot.appendChild(el("span", "mastery-badge", "Mastered"));
-      }
-      body.appendChild(foot);
-
-      row.appendChild(badge);
-      row.appendChild(body);
-      list.appendChild(row);
-    });
-
-    root.appendChild(list);
-  }
 
   /**
    * Recent attempts across every module, newest first.
@@ -290,15 +157,22 @@
 
     modules.forEach(function (module) {
       const data = (window.QUIZ_DATA || {})[module.id];
+      const questions = (data && data.questions) || [];
+
       window.Progress.getStrugglingQuestions(module.id).forEach(function (entry) {
-        const question = data
-          ? data.questions.filter(function (q) { return q.id === entry.questionId; })[0]
-          : null;
-        rows.push({
-          module: module,
-          stat: entry.stat,
-          text: question ? question.question : entry.questionId
-        });
+        const question = questions.filter(function (q) {
+          return q.id === entry.questionId;
+        })[0];
+
+        /* Skip anything we can't name. Stats outlive their questions in two
+         * ways: a Parsons puzzle or free-write task is recorded per item but
+         * has no multiple-choice question behind it, and a question deleted
+         * from a data file leaves its history behind. Either way, printing a
+         * raw id like "js-p1" in a table of questions is worse than omitting
+         * the row. */
+        if (!question) return;
+
+        rows.push({ module: module, stat: entry.stat, text: question.question });
       });
     });
 
@@ -356,8 +230,9 @@
   }
 
   function init() {
-    const summaryRoot = document.querySelector("[data-dash-summary]");
-    if (!summaryRoot) return;
+    const recentRoot0 = document.querySelector("[data-dash-recent]");
+    const reviewRoot0 = document.querySelector("[data-dash-review]");
+    if (!recentRoot0 && !reviewRoot0) return;
 
     if (typeof window.Progress === "undefined" || !window.SiteModules) {
       console.warn("SkillUp: dashboard needs progress.js and modules.js.");
@@ -365,20 +240,6 @@
     }
 
     const modules = window.SiteModules.all();
-    const summaries = modules.map(function (m) {
-      return window.Progress.getModuleSummary(m.id);
-    });
-
-    // Be honest when nothing can be saved.
-    if (!window.Progress.isAvailable()) {
-      const warning = document.querySelector("[data-dash-storage-warning]");
-      if (warning) warning.hidden = false;
-    }
-
-    renderSummary(summaryRoot, modules, summaries);
-
-    const modulesRoot = document.querySelector("[data-dash-modules]");
-    if (modulesRoot) renderModules(modulesRoot, modules, summaries);
 
     const recentRoot = document.querySelector("[data-dash-recent]");
     if (recentRoot && !renderRecent(recentRoot, modules, 10)) hideSection(recentRoot);
@@ -386,11 +247,6 @@
     const reviewRoot = document.querySelector("[data-dash-review]");
     if (reviewRoot && !renderReview(reviewRoot, modules, 10)) hideSection(reviewRoot);
 
-    // Nothing recorded at all? Point them at a module rather than showing
-    // three empty tables.
-    const totalAttempts = summaries.reduce(function (sum, s) { return sum + s.attemptCount; }, 0);
-    const empty = document.querySelector("[data-dash-empty]");
-    if (empty && totalAttempts === 0) empty.hidden = false;
   }
 
   /*

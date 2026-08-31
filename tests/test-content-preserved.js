@@ -15,7 +15,12 @@ const ROOT = require("path").resolve(__dirname, "..");
 const BASELINE = "df4817d";
 /* Data files now register under their moduleId, which is also the page
  * basename — so the page name and the QUIZ_DATA key are the same string. */
-const PAGES = ["javascript", "sql", "python", "fhir", "soap", "oauth", "rest-apis"];
+/* "javascript" is deliberately absent. Its questions were rewritten from
+ * recognition ("What is a closure?") into trace snippets when the module became
+ * a three-stage progression, so they no longer match the baseline by design.
+ * The question IDS were kept, so answer history survived — that is asserted in
+ * tests/test-stages.js instead. Every other module must still be untouched. */
+const PAGES = ["sql", "python", "fhir", "soap", "oauth", "rest-apis"];
 
 // Load the NEW data files.
 const sb = { window: {} };

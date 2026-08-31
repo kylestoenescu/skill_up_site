@@ -78,12 +78,11 @@ function runNav(scriptSrc, pagePath) {
   const moduleCount = fs.readdirSync(ROOT + "modules").filter((f) => f.endsWith(".html")).length;
   check("home: one nav link per module, no more", r.moduleLinks().length === moduleCount);
   check("home: standalone pages all present",
-    ["Home", "Dashboard", "Flashcards"].every((label) => !!r.byLabel(label)));
+    ["Home", "Flashcards"].every((label) => !!r.byLabel(label)));
   check("home: no duplicate links",
     new Set(r.links.map((l) => l.href)).size === r.links.length);
   check("home: brand points at root index", r.brandHref === "https://train.example.com/index.html");
   check("home: module link is root-relative", r.byLabel("JavaScript").href === "https://train.example.com/modules/javascript.html");
-  check("home: Dashboard link present", r.byLabel("Dashboard").href === "https://train.example.com/dashboard.html");
   check("home: Home marked current", r.byLabel("Home").current === "page");
   check("home: exactly one aria-current", r.links.filter((l) => l.current).length === 1);
 }
@@ -95,7 +94,7 @@ function runNav(scriptSrc, pagePath) {
   check("module: sibling link resolves correctly", r.byLabel("SQL").href === "https://train.example.com/modules/sql.html");
   check("module: SQL marked current", r.byLabel("SQL").current === "page");
   check("module: Home NOT marked current", r.byLabel("Home").current === null);
-  check("module: Dashboard resolves up a level", r.byLabel("Dashboard").href === "https://train.example.com/dashboard.html");
+  check("module: Flashcards resolves up a level", r.byLabel("Flashcards").href === "https://train.example.com/flashcards.html");
   check("module: exactly one aria-current", r.links.filter((l) => l.current).length === 1);
 }
 
@@ -103,14 +102,6 @@ function runNav(scriptSrc, pagePath) {
 {
   const r = runNav("https://train.example.com/js/nav.js", "/");
   check('"/" is treated as /index.html', r.byLabel("Home").current === "page");
-}
-
-// --- the dashboard marks itself current --------------------------------
-{
-  const r = runNav("https://train.example.com/js/nav.js", "/dashboard.html");
-  check("dashboard: Dashboard marked current", r.byLabel("Dashboard").current === "page");
-  check("dashboard: Home NOT marked current", r.byLabel("Home").current === null);
-  check("dashboard: exactly one aria-current", r.links.filter((l) => l.current).length === 1);
 }
 
 // --- GitHub Pages project subpath (username.github.io/skill_up_site/) --

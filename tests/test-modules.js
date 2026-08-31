@@ -111,8 +111,17 @@ manifest.forEach(function (m) {
     scriptPos(html, "js/modules.js") < scriptPos(html, "js/nav.js"));
   check(m.id + ": page loads its own data file",
     scriptPos(html, "js/data/" + m.id + ".js") !== -1);
-  check(m.id + ': page calls initQuiz("quiz", "' + m.id + '")',
-    html.indexOf('initQuiz("quiz", "' + m.id + '")') !== -1);
+  /* A staged module boots the stage engine instead of the flat quiz engine. */
+  const stages = helpers.stagesFor(m);
+  if (stages) {
+    check(m.id + ': staged page calls initStages("stages", "' + m.id + '")',
+      html.indexOf('initStages("stages", "' + m.id + '")') !== -1);
+    check(m.id + ": staged page loads stages.js", scriptPos(html, "js/stages.js") !== -1);
+    check(m.id + ": staged page does NOT load quiz.js", scriptPos(html, "js/quiz.js") === -1);
+  } else {
+    check(m.id + ': page calls initQuiz("quiz", "' + m.id + '")',
+      html.indexOf('initQuiz("quiz", "' + m.id + '")') !== -1);
+  }
 });
 
 /*
@@ -122,10 +131,13 @@ manifest.forEach(function (m) {
  * which asks the manifest instead — so what's worth checking is that they use
  * the loader and have NOT drifted back to hand-written tags.
  */
-["dashboard", "flashcards"].forEach(function (page) {
-  const file = page + ".html";
+[
+  { file: "index.html", script: "js/home.js" },
+  { file: "flashcards.html", script: "js/flashcards.js" }
+].forEach(function (entry) {
+  const file = entry.file;
   const html = fs.readFileSync(path.join(ROOT, file), "utf8");
-  const pageScript = "js/" + page + ".js";
+  const pageScript = entry.script;
 
   check(file + ": loads modules.js before nav.js",
     scriptPos(html, "js/modules.js") !== -1 &&
@@ -242,9 +254,13 @@ manifest.forEach(function (m) {
   check("home page loads modules.js before home.js",
     scriptPos(home, "js/modules.js") !== -1 &&
     scriptPos(home, "js/modules.js") < scriptPos(home, "js/home.js"));
-  check("home page loads progress.js before home.js (tiles show best scores)",
+  check("home page loads progress.js before home.js (cards show status)",
     scriptPos(home, "js/progress.js") !== -1 &&
     scriptPos(home, "js/progress.js") < scriptPos(home, "js/home.js"));
+  check("home page carries the history tables (the old dashboard)",
+    /data-dash-recent/.test(home) && /data-dash-review/.test(home));
+  check("dashboard.html is gone — home IS the dashboard",
+    !fs.existsSync(path.join(ROOT, "dashboard.html")));
   const tileCount = (home.match(/class="module-card"/g) || []).length;
   check("no hand-written module tiles remain", tileCount === 0);
 }

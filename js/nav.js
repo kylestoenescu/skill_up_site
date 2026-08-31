@@ -56,8 +56,10 @@
   /* Pages that aren't modules. They lead the nav, then the manifest's modules
    * are appended. Add a non-module page here; add a module to js/modules.js. */
   const STATIC_LINKS = [
+    /* The dashboard used to be its own page; its module status now lives on
+     * the home page and its history tables moved there too, so Home IS the
+     * dashboard. */
     { label: "Home", path: "index.html" },
-    { label: "Dashboard", path: "dashboard.html" },
     { label: "Flashcards", path: "flashcards.html" }
   ];
 

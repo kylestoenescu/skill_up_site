@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JavaScript — SkillUp</title>
-  <link rel="stylesheet" href="../css/styles.css?v=6" />
+  <link rel="stylesheet" href="../css/styles.css?v=8" />
   <!-- modules.js must load before nav.js: the nav is built from that manifest.
        Deferred scripts run in document order, so tag order guarantees it. -->
-  <script src="../js/modules.js?v=6" defer></script>
-  <script src="../js/nav.js?v=6" defer></script>
+  <script src="../js/modules.js?v=8" defer></script>
+  <script src="../js/nav.js?v=8" defer></script>
 </head>
 <body>
 
@@ -38,9 +38,9 @@
     </section>
 
     <section class="quiz-section">
-      <h2>Quiz</h2>
-      <p class="quiz-intro">Answer every question, then check your results.</p>
-      <div id="quiz"></div>
+      <h2>Practice</h2>
+      <p class="quiz-intro">Three stages, each unlocking the next: predict what code does, then assemble it, then write it.</p>
+      <div id="stages"></div>
     </section>
   </main>
 
@@ -49,11 +49,11 @@
   </footer>
 
   <!-- Load order matters: storage layer, then engine, then this module's data. -->
-  <script src="../js/progress.js?v=6"></script>
-  <script src="../js/quiz.js?v=6"></script>
-  <script src="../js/data/javascript.js?v=6"></script>
+  <script src="../js/progress.js?v=8"></script>
+  <script src="../js/stages.js?v=8"></script>
+  <script src="../js/data/javascript.js?v=8"></script>
   <script>
-    initQuiz("quiz", "javascript");
+    initStages("stages", "javascript");
   </script>
 </body>
 </html>

@@ -40,7 +40,12 @@ window.SITE_MODULES = [
     id: "javascript",
     title: "JavaScript",
     badge: "JS",
-    blurb: "The language of the web: syntax, the DOM, and asynchronous code."
+    blurb: "The language of the web: syntax, the DOM, and asynchronous code.",
+    /* This module is a gated three-stage progression rather than one flat quiz.
+     * Listing the stage ids here is what tells the rest of the site to score it
+     * per stage: mastery means ALL of these are passed, not just the first.
+     * Omit `stages` and a module behaves as a single quiz, like the other six. */
+    stages: ["trace", "parsons", "free"]
   },
   {
     id: "sql",
@@ -96,6 +101,17 @@ window.SiteModules = {
     return window.SITE_MODULES.filter(function (m) {
       return m.id === id;
     })[0];
+  },
+
+  /**
+   * @param {object|string} module or id
+   * @returns {string[]|null} the module's stage ids, or null if it's a single
+   *          flat quiz. Callers branch on this to decide whether to score the
+   *          module as a whole or stage by stage.
+   */
+  stagesFor: function (module) {
+    const entry = typeof module === "string" ? this.byId(module) : module;
+    return entry && Array.isArray(entry.stages) && entry.stages.length ? entry.stages : null;
   },
 
   /** @returns {string[]} just the ids — handy for Progress.getAllSummaries() */
