@@ -5,23 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OAuth — SkillUp</title>
   <link rel="stylesheet" href="../css/styles.css" />
+  <!-- Builds the header/nav at runtime. Defined once in js/nav.js. -->
+  <script src="../js/nav.js" defer></script>
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="../index.html">Skill<span>Up</span></a>
-      <nav class="site-nav">
-        <a href="../index.html">Home</a>
-        <a href="javascript.html">JavaScript</a>
-        <a href="sql.html">SQL</a>
-        <a href="python.html">Python</a>
-        <a href="fhir.html">FHIR</a>
-        <a href="soap.html">SOAP</a>
-        <a href="oauth.html" aria-current="page">OAuth</a>
-        <a href="rest-apis.html">REST APIs</a>
-      </nav>
-    </div>
+  <!-- Filled in by js/nav.js. The <noscript> is the no-JS fallback. -->
+  <header class="site-header" data-site-header>
+    <noscript>
+      <div class="header-inner">
+        <a class="brand" href="../index.html">Skill<span>Up</span></a>
+        <nav class="site-nav"><a href="../index.html">All modules</a></nav>
+      </div>
+    </noscript>
   </header>
 
   <main>
@@ -41,7 +37,7 @@
 
     <section class="quiz-section">
       <h2>Quiz</h2>
-      <p class="quiz-intro">Answer all five questions, then check your results.</p>
+      <p class="quiz-intro">Answer every question, then check your results.</p>
       <div id="quiz"></div>
     </section>
   </main>
@@ -50,53 +46,12 @@
     <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
   </footer>
 
+  <!-- Load order matters: storage layer, then engine, then this module's data. -->
+  <script src="../js/progress.js"></script>
   <script src="../js/quiz.js"></script>
+  <script src="../js/data/oauth.js"></script>
   <script>
-    const quizData = {
-      questions: [
-        {
-          question: "What problem does OAuth primarily solve?",
-          options: [
-            "Encrypting data at rest",
-            "Letting an app access a user's resources on another service without handling the user's password",
-            "Compressing HTTP responses",
-            "Translating between XML and JSON"
-          ],
-          correctIndex: 1,
-          explanation: " OAuth is an authorization framework for delegated access — the client never sees the user's credentials."
-        },
-        {
-          question: "In OAuth terminology, who owns the data being accessed?",
-          options: ["The client", "The authorization server", "The resource owner", "The resource server"],
-          correctIndex: 2,
-          explanation: " The resource owner is the user who owns the data and grants (or denies) access to it."
-        },
-        {
-          question: "What is issued to a client after successful authorization, and used to access protected resources?",
-          options: ["A session cookie", "An access token", "A password hash", "A CSRF token"],
-          correctIndex: 1,
-          explanation: " The access token is the credential the client presents to the resource server on each request."
-        },
-        {
-          question: "Which OAuth grant type is recommended for a server-side web app exchanging a code for a token?",
-          options: ["Implicit grant", "Authorization code grant", "Password grant", "OAuth doesn't use grant types"],
-          correctIndex: 1,
-          explanation: " The authorization code grant is the standard, secure flow for server-side apps: the app gets a short-lived code, then exchanges it server-to-server for a token."
-        },
-        {
-          question: "What is the purpose of \"scopes\" in an OAuth request?",
-          options: [
-            "To define the visual theme of the login page",
-            "To limit exactly what access the client is requesting",
-            "To specify the token's expiration date format",
-            "To encrypt the access token"
-          ],
-          correctIndex: 1,
-          explanation: " Scopes let the client request narrow, specific permissions (like read-only calendar access) rather than blanket account access."
-        }
-      ]
-    };
-    initQuiz("quiz", quizData);
+    initQuiz("quiz", QUIZ_DATA.oauth);
   </script>
 </body>
 </html>

@@ -5,23 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SOAP — SkillUp</title>
   <link rel="stylesheet" href="../css/styles.css" />
+  <!-- Builds the header/nav at runtime. Defined once in js/nav.js. -->
+  <script src="../js/nav.js" defer></script>
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="../index.html">Skill<span>Up</span></a>
-      <nav class="site-nav">
-        <a href="../index.html">Home</a>
-        <a href="javascript.html">JavaScript</a>
-        <a href="sql.html">SQL</a>
-        <a href="python.html">Python</a>
-        <a href="fhir.html">FHIR</a>
-        <a href="soap.html" aria-current="page">SOAP</a>
-        <a href="oauth.html">OAuth</a>
-        <a href="rest-apis.html">REST APIs</a>
-      </nav>
-    </div>
+  <!-- Filled in by js/nav.js. The <noscript> is the no-JS fallback. -->
+  <header class="site-header" data-site-header>
+    <noscript>
+      <div class="header-inner">
+        <a class="brand" href="../index.html">Skill<span>Up</span></a>
+        <nav class="site-nav"><a href="../index.html">All modules</a></nav>
+      </div>
+    </noscript>
   </header>
 
   <main>
@@ -41,7 +37,7 @@
 
     <section class="quiz-section">
       <h2>Quiz</h2>
-      <p class="quiz-intro">Answer all five questions, then check your results.</p>
+      <p class="quiz-intro">Answer every question, then check your results.</p>
       <div id="quiz"></div>
     </section>
   </main>
@@ -50,48 +46,12 @@
     <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
   </footer>
 
+  <!-- Load order matters: storage layer, then engine, then this module's data. -->
+  <script src="../js/progress.js"></script>
   <script src="../js/quiz.js"></script>
+  <script src="../js/data/soap.js"></script>
   <script>
-    const quizData = {
-      questions: [
-        {
-          question: "What format does SOAP use to structure its messages?",
-          options: ["JSON", "XML", "YAML", "Plain text"],
-          correctIndex: 1,
-          explanation: " SOAP messages are always XML documents with a strict structure."
-        },
-        {
-          question: "What document describes the operations, messages, and location of a SOAP web service?",
-          options: ["A Swagger file", "WSDL", "A README", "manifest.json"],
-          correctIndex: 1,
-          explanation: " WSDL (Web Services Description Language) is the XML contract that describes a SOAP service's operations."
-        },
-        {
-          question: "What is the outermost element of a SOAP message called?",
-          options: ["Body", "Header", "Envelope", "Fault"],
-          correctIndex: 2,
-          explanation: " The Envelope wraps the entire message, containing an optional Header and a required Body."
-        },
-        {
-          question: "Which element carries error information when a SOAP request fails?",
-          options: ["SOAP:Error", "SOAP:Fault", "SOAP:Exception", "SOAP:Warning"],
-          correctIndex: 1,
-          explanation: " A Fault element inside the Body reports errors, including a fault code and message."
-        },
-        {
-          question: "Compared to REST, SOAP is generally considered:",
-          options: [
-            "Lightweight and stateless by default",
-            "More rigid, with a strict contract and built-in standards like WS-Security",
-            "Only usable over FTP",
-            "Impossible to use with HTTP"
-          ],
-          correctIndex: 1,
-          explanation: " SOAP enforces a formal contract (WSDL) and supports built-in standards like WS-Security, making it stricter but more heavyweight than typical REST APIs."
-        }
-      ]
-    };
-    initQuiz("quiz", quizData);
+    initQuiz("quiz", QUIZ_DATA.soap);
   </script>
 </body>
 </html>

@@ -351,9 +351,15 @@ li code {
   display: block;
 }
 
+/* The gap between "Correct." and the explanation is produced here, not by a
+   leading space inside the explanation string in js/data/*.js. */
 .quiz-feedback .result-label {
   font-weight: 700;
   margin-right: 6px;
+}
+
+.quiz-feedback .result-explanation {
+  color: var(--text);
 }
 
 .quiz-feedback.correct .result-label {
@@ -399,18 +405,110 @@ li code {
   background: var(--accent-soft);
 }
 
-.quiz-score {
+/* ---------- quiz: stats banner shown above the questions ---------- */
+
+.quiz-stats {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.quiz-stats.is-retry {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.quiz-stats-line {
+  margin: 0;
+  font-weight: 600;
+}
+
+.quiz-stats-sub {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.mastery-badge {
+  display: inline-block;
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid var(--success);
+  border-radius: 999px;
+  padding: 1px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+/* ---------- quiz: score readout ---------- */
+
+.quiz-score {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--radius);
   padding: 18px 22px;
   margin-bottom: 20px;
-  font-weight: 600;
   display: none;
 }
 
 .quiz-score.is-visible {
   display: block;
+}
+
+.quiz-score.is-pass {
+  border-left-color: var(--success);
+  background: var(--success-soft);
+}
+
+.quiz-score.is-fail {
+  border-left-color: var(--error);
+  background: var(--error-soft);
+}
+
+.quiz-score-headline {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.quiz-score-verdict {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* ---------- quiz: post-attempt results and retry routing ---------- */
+
+.quiz-results {
+  display: none;
+  margin-top: 20px;
+}
+
+.quiz-results.is-visible {
+  display: block;
+}
+
+.quiz-results-heading {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.quiz-missed {
+  margin: 0 0 4px;
+  padding-left: 20px;
+  font-size: 0.92rem;
+}
+
+.quiz-missed li {
+  margin-bottom: 6px;
 }
 
 .quiz-note {
@@ -422,4 +520,55 @@ li code {
 
 .quiz-note.is-visible {
   display: block;
+}
+
+/* ---------- home page: progress export / import ---------- */
+
+.progress-tools {
+  margin-top: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+}
+
+.progress-tools h2 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.progress-tools p {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.progress-tools-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* The "Import" control is a <label> wrapping a hidden file input, so it needs
+   the flex/inline treatment a <button> gets for free. */
+.file-btn {
+  display: inline-flex;
+  align-items: center;
+}
+
+.progress-tools-status {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  min-height: 1.2em;
+}
+
+.progress-tools-status.is-ok {
+  color: var(--success);
+}
+
+.progress-tools-status.is-error {
+  color: var(--error);
 }

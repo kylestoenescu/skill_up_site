@@ -5,23 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>REST APIs — SkillUp</title>
   <link rel="stylesheet" href="../css/styles.css" />
+  <!-- Builds the header/nav at runtime. Defined once in js/nav.js. -->
+  <script src="../js/nav.js" defer></script>
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="../index.html">Skill<span>Up</span></a>
-      <nav class="site-nav">
-        <a href="../index.html">Home</a>
-        <a href="javascript.html">JavaScript</a>
-        <a href="sql.html">SQL</a>
-        <a href="python.html">Python</a>
-        <a href="fhir.html">FHIR</a>
-        <a href="soap.html">SOAP</a>
-        <a href="oauth.html">OAuth</a>
-        <a href="rest-apis.html" aria-current="page">REST APIs</a>
-      </nav>
-    </div>
+  <!-- Filled in by js/nav.js. The <noscript> is the no-JS fallback. -->
+  <header class="site-header" data-site-header>
+    <noscript>
+      <div class="header-inner">
+        <a class="brand" href="../index.html">Skill<span>Up</span></a>
+        <nav class="site-nav"><a href="../index.html">All modules</a></nav>
+      </div>
+    </noscript>
   </header>
 
   <main>
@@ -41,7 +37,7 @@
 
     <section class="quiz-section">
       <h2>Quiz</h2>
-      <p class="quiz-intro">Answer all five questions, then check your results.</p>
+      <p class="quiz-intro">Answer every question, then check your results.</p>
       <div id="quiz"></div>
     </section>
   </main>
@@ -50,48 +46,12 @@
     <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
   </footer>
 
+  <!-- Load order matters: storage layer, then engine, then this module's data. -->
+  <script src="../js/progress.js"></script>
   <script src="../js/quiz.js"></script>
+  <script src="../js/data/rest-apis.js"></script>
   <script>
-    const quizData = {
-      questions: [
-        {
-          question: "Which HTTP method is conventionally used to retrieve a resource without modifying it?",
-          options: ["POST", "GET", "DELETE", "PUT"],
-          correctIndex: 1,
-          explanation: " GET requests are meant to be safe and read-only, fetching a resource's current representation."
-        },
-        {
-          question: "What does it mean for a REST API to be \"stateless\"?",
-          options: [
-            "The server never stores any data",
-            "Each request must contain all the information needed to process it, since the server holds no client session state between requests",
-            "The API has no error states",
-            "Clients can only make one request per session"
-          ],
-          correctIndex: 1,
-          explanation: " Statelessness means the server doesn't remember prior requests — every request is self-contained, which helps APIs scale."
-        },
-        {
-          question: "Which HTTP status code indicates a request succeeded and a new resource was created?",
-          options: ["200 OK", "201 Created", "404 Not Found", "500 Internal Server Error"],
-          correctIndex: 1,
-          explanation: " 201 Created specifically signals that the request succeeded and resulted in a new resource, often returned from a POST."
-        },
-        {
-          question: "Which HTTP method is typically used to completely replace an existing resource?",
-          options: ["GET", "PATCH", "PUT", "OPTIONS"],
-          correctIndex: 2,
-          explanation: " PUT conventionally replaces a resource in full, while PATCH applies a partial update."
-        },
-        {
-          question: "In REST, resources are typically identified by:",
-          options: ["Function names", "URLs (URIs)", "Global variables", "Environment variables"],
-          correctIndex: 1,
-          explanation: " Every REST resource has its own URL, such as /users/42, which clients use to address it directly."
-        }
-      ]
-    };
-    initQuiz("quiz", quizData);
+    initQuiz("quiz", QUIZ_DATA.restApis);
   </script>
 </body>
 </html>

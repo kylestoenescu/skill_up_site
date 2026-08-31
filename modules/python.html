@@ -5,23 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Python — SkillUp</title>
   <link rel="stylesheet" href="../css/styles.css" />
+  <!-- Builds the header/nav at runtime. Defined once in js/nav.js. -->
+  <script src="../js/nav.js" defer></script>
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="../index.html">Skill<span>Up</span></a>
-      <nav class="site-nav">
-        <a href="../index.html">Home</a>
-        <a href="javascript.html">JavaScript</a>
-        <a href="sql.html">SQL</a>
-        <a href="python.html" aria-current="page">Python</a>
-        <a href="fhir.html">FHIR</a>
-        <a href="soap.html">SOAP</a>
-        <a href="oauth.html">OAuth</a>
-        <a href="rest-apis.html">REST APIs</a>
-      </nav>
-    </div>
+  <!-- Filled in by js/nav.js. The <noscript> is the no-JS fallback. -->
+  <header class="site-header" data-site-header>
+    <noscript>
+      <div class="header-inner">
+        <a class="brand" href="../index.html">Skill<span>Up</span></a>
+        <nav class="site-nav"><a href="../index.html">All modules</a></nav>
+      </div>
+    </noscript>
   </header>
 
   <main>
@@ -41,7 +37,7 @@
 
     <section class="quiz-section">
       <h2>Quiz</h2>
-      <p class="quiz-intro">Answer all five questions, then check your results.</p>
+      <p class="quiz-intro">Answer every question, then check your results.</p>
       <div id="quiz"></div>
     </section>
   </main>
@@ -50,48 +46,12 @@
     <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
   </footer>
 
+  <!-- Load order matters: storage layer, then engine, then this module's data. -->
+  <script src="../js/progress.js"></script>
   <script src="../js/quiz.js"></script>
+  <script src="../js/data/python.js"></script>
   <script>
-    const quizData = {
-      questions: [
-        {
-          question: "How do you define a function named my_func in Python?",
-          options: ["def my_func():", "function myFunc() {}", "func myFunc()", "void myFunc()"],
-          correctIndex: 0,
-          explanation: " Python functions start with the def keyword, followed by the name, parentheses, and a colon."
-        },
-        {
-          question: "What does range(5) return in Python 3?",
-          options: ["A list of five numbers", "A range object that produces values lazily when iterated", "A tuple", "A string"],
-          correctIndex: 1,
-          explanation: " In Python 3, range() returns a lazy, iterable range object rather than building a full list in memory."
-        },
-        {
-          question: "Which line correctly creates a list of squares for 0 through 4 using a list comprehension?",
-          options: [
-            "[x**2 for x in range(5)]",
-            "list x**2 for x in range(5)",
-            "[x^2 for x in range(5)]",
-            "squares(x**2, range(5))"
-          ],
-          correctIndex: 0,
-          explanation: " List comprehensions use the form [expression for item in iterable]. Note ** is Python's exponent operator, not ^."
-        },
-        {
-          question: "What does the expression 5 / 0 raise in Python?",
-          options: ["ZeroDivisionError", "SyntaxError", "TypeError", "It returns 0"],
-          correctIndex: 0,
-          explanation: " Dividing by zero raises a ZeroDivisionError at runtime."
-        },
-        {
-          question: "Which keyword is used to catch exceptions in Python?",
-          options: ["catch", "except", "rescue", "handle"],
-          correctIndex: 1,
-          explanation: " Python uses try/except (optionally with else and finally) rather than try/catch."
-        }
-      ]
-    };
-    initQuiz("quiz", quizData);
+    initQuiz("quiz", QUIZ_DATA.python);
   </script>
 </body>
 </html>

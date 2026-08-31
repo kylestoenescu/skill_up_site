@@ -5,23 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SkillUp — Developer Training</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <!-- Builds the header/nav at runtime. Defined once in js/nav.js. -->
+  <script src="js/nav.js" defer></script>
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="index.html">Skill<span>Up</span></a>
-      <nav class="site-nav">
-        <a href="index.html" aria-current="page">Home</a>
-        <a href="modules/javascript.html">JavaScript</a>
-        <a href="modules/sql.html">SQL</a>
-        <a href="modules/python.html">Python</a>
-        <a href="modules/fhir.html">FHIR</a>
-        <a href="modules/soap.html">SOAP</a>
-        <a href="modules/oauth.html">OAuth</a>
-        <a href="modules/rest-apis.html">REST APIs</a>
-      </nav>
-    </div>
+  <!-- Filled in by js/nav.js. The <noscript> is the no-JS fallback. -->
+  <header class="site-header" data-site-header>
+    <noscript>
+      <div class="header-inner">
+        <a class="brand" href="index.html">Skill<span>Up</span></a>
+      </div>
+    </noscript>
   </header>
 
   <main>
@@ -80,11 +75,28 @@
         <span class="go">Start module &rarr;</span>
       </a>
     </section>
+
+    <!-- Revealed by js/progress-io.js once it knows the storage layer loaded. -->
+    <section class="progress-tools" data-progress-tools hidden>
+      <h2>Your progress</h2>
+      <p>Quiz results are saved in this browser only — they don't follow you to another device. Export a backup file to move them, or to keep them safe.</p>
+      <div class="progress-tools-actions">
+        <button type="button" class="btn btn-secondary" data-progress-export>Export progress</button>
+        <label class="btn btn-secondary file-btn">
+          Import progress
+          <input type="file" accept="application/json,.json" data-progress-import hidden />
+        </label>
+      </div>
+      <p class="progress-tools-status" role="status" data-progress-status></p>
+    </section>
   </main>
 
   <footer class="site-footer">
     <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
   </footer>
+
+  <script src="js/progress.js"></script>
+  <script src="js/progress-io.js"></script>
 
 </body>
 </html>

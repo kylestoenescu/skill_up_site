@@ -5,23 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FHIR — SkillUp</title>
   <link rel="stylesheet" href="../css/styles.css" />
+  <!-- Builds the header/nav at runtime. Defined once in js/nav.js. -->
+  <script src="../js/nav.js" defer></script>
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="../index.html">Skill<span>Up</span></a>
-      <nav class="site-nav">
-        <a href="../index.html">Home</a>
-        <a href="javascript.html">JavaScript</a>
-        <a href="sql.html">SQL</a>
-        <a href="python.html">Python</a>
-        <a href="fhir.html" aria-current="page">FHIR</a>
-        <a href="soap.html">SOAP</a>
-        <a href="oauth.html">OAuth</a>
-        <a href="rest-apis.html">REST APIs</a>
-      </nav>
-    </div>
+  <!-- Filled in by js/nav.js. The <noscript> is the no-JS fallback. -->
+  <header class="site-header" data-site-header>
+    <noscript>
+      <div class="header-inner">
+        <a class="brand" href="../index.html">Skill<span>Up</span></a>
+        <nav class="site-nav"><a href="../index.html">All modules</a></nav>
+      </div>
+    </noscript>
   </header>
 
   <main>
@@ -41,7 +37,7 @@
 
     <section class="quiz-section">
       <h2>Quiz</h2>
-      <p class="quiz-intro">Answer all five questions, then check your results.</p>
+      <p class="quiz-intro">Answer every question, then check your results.</p>
       <div id="quiz"></div>
     </section>
   </main>
@@ -50,48 +46,12 @@
     <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
   </footer>
 
+  <!-- Load order matters: storage layer, then engine, then this module's data. -->
+  <script src="../js/progress.js"></script>
   <script src="../js/quiz.js"></script>
+  <script src="../js/data/fhir.js"></script>
   <script>
-    const quizData = {
-      questions: [
-        {
-          question: "What does FHIR stand for?",
-          options: [
-            "Fast Healthcare Interoperability Resources",
-            "Federal Health Information Records",
-            "Flexible Hospital Information Repository",
-            "Format for Health Information Reporting"
-          ],
-          correctIndex: 0,
-          explanation: " FHIR is short for Fast Healthcare Interoperability Resources, an HL7 standard."
-        },
-        {
-          question: "What is the basic building block of FHIR data called?",
-          options: ["A Resource", "A Table", "An Endpoint", "A Schema"],
-          correctIndex: 0,
-          explanation: " FHIR data is organized into Resources such as Patient, Observation, and Encounter."
-        },
-        {
-          question: "Which architectural style does FHIR primarily use for its API?",
-          options: ["SOAP", "RESTful HTTP", "FTP", "gRPC"],
-          correctIndex: 1,
-          explanation: " FHIR is built around standard RESTful HTTP conventions like GET, POST, and PUT on resource URLs."
-        },
-        {
-          question: "Which FHIR resource represents an individual receiving care?",
-          options: ["Practitioner", "Patient", "Encounter", "Observation"],
-          correctIndex: 1,
-          explanation: " The Patient resource represents the person receiving care; Practitioner represents the caregiver."
-        },
-        {
-          question: "In which formats can FHIR resources typically be represented?",
-          options: ["Only CSV", "JSON and XML", "Only plain text", "Only PDF"],
-          correctIndex: 1,
-          explanation: " FHIR resources are most commonly exchanged as JSON, with XML also fully supported."
-        }
-      ]
-    };
-    initQuiz("quiz", quizData);
+    initQuiz("quiz", QUIZ_DATA.fhir);
   </script>
 </body>
 </html>
