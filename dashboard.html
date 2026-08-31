@@ -4,11 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard — SkillUp</title>
-  <link rel="stylesheet" href="css/styles.css?v=5" />
-  <!-- modules.js must come first: nav.js reads the manifest from it.
-       Deferred scripts run in document order, so tag order guarantees it. -->
-  <script src="js/modules.js?v=5" defer></script>
-  <script src="js/nav.js?v=5" defer></script>
+  <link rel="stylesheet" href="css/styles.css?v=6" />
+  <!-- All page scripts are deferred and listed in dependency order.
+       Deferred scripts run after parsing, in document order, so this ordering
+       IS the guarantee. Note they must be together: a normal <script> at the
+       end of <body> would execute BEFORE any deferred script in <head>. -->
+  <script src="js/modules.js?v=6" defer></script>
+  <script src="js/nav.js?v=6" defer></script>
+  <script src="js/progress.js?v=6" defer></script>
+  <script src="js/data-loader.js?v=6" defer></script>
+  <script src="js/dashboard.js?v=6" defer></script>
+  <script src="js/progress-io.js?v=6" defer></script>
 </head>
 <body>
 
@@ -81,18 +87,6 @@
     <p>SkillUp Training &middot; built with plain HTML, CSS &amp; JS</p>
   </footer>
 
-  <!-- progress.js is the data layer. The module data files supply question text
-       for the "Questions to review" table, which stores only question ids. -->
-  <script src="js/progress.js?v=5"></script>
-  <script src="js/data/javascript.js?v=5"></script>
-  <script src="js/data/sql.js?v=5"></script>
-  <script src="js/data/python.js?v=5"></script>
-  <script src="js/data/fhir.js?v=5"></script>
-  <script src="js/data/soap.js?v=5"></script>
-  <script src="js/data/oauth.js?v=5"></script>
-  <script src="js/data/rest-apis.js?v=5"></script>
-  <script src="js/dashboard.js?v=5"></script>
-  <script src="js/progress-io.js?v=5"></script>
 
 </body>
 </html>

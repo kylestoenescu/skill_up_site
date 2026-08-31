@@ -210,14 +210,13 @@ function answer(id, correct) {
     scriptPos("js/progress.js") !== -1 &&
     scriptPos("js/progress.js") < scriptPos("js/flashcards.js"));
 
-  let missing = [];
-  manifestSb.SITE_MODULES.forEach(function (m) {
-    const f = manifestSb.SiteModules.dataFileFor(m);
-    if (scriptPos(f) === -1) missing.push(f);
-    else if (scriptPos(f) > scriptPos("js/flashcards.js")) missing.push(f + " (after flashcards.js)");
-  });
-  check("flashcards.html loads a data file for every module" +
-    (missing.length ? " — missing: " + missing.join(", ") : ""), missing.length === 0);
+  /* Data files are no longer hand-listed here — js/data-loader.js pulls them
+   * from the manifest. See test-modules.js for the loader's own coverage. */
+  check("flashcards.html loads data-loader.js before flashcards.js",
+    scriptPos("js/data-loader.js") !== -1 &&
+    scriptPos("js/data-loader.js") < scriptPos("js/flashcards.js"));
+  check("flashcards.html has no hard-coded js/data/ tags",
+    (html.match(/src="[^"]*js\/data\/[^"]+"/g) || []).length === 0);
 
   const navSrc = fs.readFileSync(ROOT + "/js/nav.js", "utf8");
   check("Flashcards is in the nav", /flashcards\.html/.test(navSrc));

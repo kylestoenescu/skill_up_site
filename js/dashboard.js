@@ -393,9 +393,24 @@
     if (empty && totalAttempts === 0) empty.hidden = false;
   }
 
+  /*
+   * Question text lives in js/data/*.js, which js/data-loader.js fetches from
+   * the manifest. Those are injected scripts, so they arrive asynchronously —
+   * wait for them before rendering, or the "Questions to review" table would
+   * fall back to showing raw question ids.
+   *
+   * Everything else on the page (scores, meters, attempt history) comes from
+   * progress.js and doesn't need the data files, so if the loader is missing
+   * entirely we still render rather than showing nothing.
+   */
+  function start() {
+    if (window.SiteData) window.SiteData.loadAll().then(init);
+    else init();
+  }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+    document.addEventListener("DOMContentLoaded", start);
   } else {
-    init();
+    start();
   }
 })();

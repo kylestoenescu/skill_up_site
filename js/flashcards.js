@@ -373,9 +373,20 @@
     startSession();
   }
 
+  /*
+   * The deck is useless without question text, and that comes from the data
+   * files js/data-loader.js pulls in from the manifest. Those load
+   * asynchronously, so wait for them — buildDeck() drops any card whose
+   * question it can't resolve, so rendering early would show an empty deck.
+   */
+  function start() {
+    if (window.SiteData) window.SiteData.loadAll().then(init);
+    else init();
+  }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+    document.addEventListener("DOMContentLoaded", start);
   } else {
-    init();
+    start();
   }
 })();

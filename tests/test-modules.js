@@ -116,34 +116,123 @@ manifest.forEach(function (m) {
 });
 
 /*
- * The dashboard resolves question TEXT from QUIZ_DATA, so it has to load every
- * module's data file. Those script tags are hand-written while the manifest is
- * generated from — a drift risk the manifest was meant to remove. If you add a
- * module and forget its <script> here, the "Questions to review" table silently
- * falls back to showing raw question ids. This check catches that.
+ * The multi-module pages (dashboard, flashcards) need question text for EVERY
+ * module. They used to hard-code one <script> per data file, which was the last
+ * place a list could drift from the manifest. They now load js/data-loader.js,
+ * which asks the manifest instead — so what's worth checking is that they use
+ * the loader and have NOT drifted back to hand-written tags.
+ */
+["dashboard", "flashcards"].forEach(function (page) {
+  const file = page + ".html";
+  const html = fs.readFileSync(path.join(ROOT, file), "utf8");
+  const pageScript = "js/" + page + ".js";
+
+  check(file + ": loads modules.js before nav.js",
+    scriptPos(html, "js/modules.js") !== -1 &&
+    scriptPos(html, "js/modules.js") < scriptPos(html, "js/nav.js"));
+
+  check(file + ": loads progress.js before " + pageScript,
+    scriptPos(html, "js/progress.js") !== -1 &&
+    scriptPos(html, "js/progress.js") < scriptPos(html, pageScript));
+
+  check(file + ": loads data-loader.js before " + pageScript,
+    scriptPos(html, "js/data-loader.js") !== -1 &&
+    scriptPos(html, "js/data-loader.js") < scriptPos(html, pageScript));
+
+  check(file + ": modules.js loads before data-loader.js (loader reads the manifest)",
+    scriptPos(html, "js/modules.js") < scriptPos(html, "js/data-loader.js"));
+
+  /* No hand-written data tags. If one creeps back in, the page stops being
+   * manifest-driven and the drift risk returns silently. */
+  const hardCoded = (html.match(/src="[^"]*js\/data\/[^"]+"/g) || []);
+  check(file + ": no hard-coded js/data/ script tags" +
+    (hardCoded.length ? " — found " + hardCoded.length : ""),
+    hardCoded.length === 0);
+
+  /* Every script on these pages must be deferred. Mixing a plain <script> in
+   * <body> with deferred ones in <head> silently inverts the order — the body
+   * script runs FIRST — which would break the dependency chain above. */
+  const tags = html.match(/<script src="js\/[^"]+"[^>]*>/g) || [];
+  const notDeferred = tags.filter(function (t) { return t.indexOf("defer") === -1; });
+  check(file + ": every script tag is deferred" +
+    (notDeferred.length ? " — " + notDeferred.join(" ") : ""),
+    notDeferred.length === 0);
+});
+
+/*
+ * Run js/data-loader.js for real and assert on the URLs it builds.
+ *
+ * The load-bearing detail is the ?v= stamp. Injected <script> tags aren't in
+ * the HTML, so tools/bump-assets.js can't stamp them; the loader has to copy
+ * the version off its own src. Without that, the data files would cache
+ * independently of the page and could go stale — the exact failure that once
+ * took the quizzes off the live site.
  */
 {
-  const dash = fs.readFileSync(ROOT + "/dashboard.html", "utf8");
+  const vm = require("vm");
 
-  check("dashboard: loads modules.js before nav.js",
-    scriptPos(dash, "js/modules.js") !== -1 &&
-    scriptPos(dash, "js/modules.js") < scriptPos(dash, "js/nav.js"));
-  check("dashboard: loads progress.js before dashboard.js",
-    scriptPos(dash, "js/progress.js") !== -1 &&
-    scriptPos(dash, "js/progress.js") < scriptPos(dash, "js/dashboard.js"));
+  function runLoader(loaderSrcUrl) {
+    const appended = [];
+    const sb = {
+      console: { warn: function () {}, log: function () {} },
+      Promise: Promise,
+      document: {
+        currentScript: { src: loaderSrcUrl },
+        querySelector: function () { return null; },
+        createElement: function () { return {}; },
+        head: { appendChild: function (node) { appended.push(node.src); } }
+      }
+    };
+    sb.window = sb;
+    vm.createContext(sb);
+    vm.runInContext(fs.readFileSync(ROOT + "/js/modules.js", "utf8"), sb);
+    vm.runInContext(fs.readFileSync(ROOT + "/js/data-loader.js", "utf8"), sb);
+    return { sb: sb, appended: appended };
+  }
 
-  let missing = [];
-  manifest.forEach(function (m) {
-    const dataFile = helpers.dataFileFor(m);
-    if (scriptPos(dash, dataFile) === -1) {
-      missing.push(dataFile);
-    } else if (scriptPos(dash, dataFile) > scriptPos(dash, "js/dashboard.js")) {
-      missing.push(dataFile + " (loaded AFTER dashboard.js)");
-    }
-  });
-  check("dashboard loads a data file for every module in the manifest" +
-    (missing.length ? "\n      missing: " + missing.join(", ") : ""),
-    missing.length === 0);
+  // Stamped, on a custom domain.
+  const stamped = runLoader("https://train.example.com/js/data-loader.js?v=6");
+  const urls = stamped.sb.SiteData.urls();
+
+  check("loader derives the site root from its own URL",
+    stamped.sb.SiteData.SITE_ROOT === "https://train.example.com/");
+  check("loader picks up the ?v= stamp from its own URL",
+    stamped.sb.SiteData.VERSION_QUERY === "?v=6");
+  check("loader builds one URL per manifest module", urls.length === manifest.length);
+  check("every built URL carries the version stamp",
+    urls.every(function (u) { return u.indexOf("?v=6") !== -1; }));
+  check("built URLs match the manifest's data files",
+    urls.join(",") === manifest
+      .map(function (m) { return "https://train.example.com/" + helpers.dataFileFor(m) + "?v=6"; })
+      .join(","));
+
+  // A GitHub Pages project subpath must keep its repo prefix.
+  const sub = runLoader("https://user.github.io/skill_up_site/js/data-loader.js?v=6");
+  check("loader keeps a project subpath",
+    sub.sb.SiteData.urls()[0].indexOf("https://user.github.io/skill_up_site/js/data/") === 0);
+
+  // Unstamped src must not invent a version.
+  const bare = runLoader("https://train.example.com/js/data-loader.js");
+  check("an unstamped loader produces unstamped URLs",
+    bare.sb.SiteData.VERSION_QUERY === "" &&
+    bare.sb.SiteData.urls()[0].indexOf("?") === -1);
+
+  // Actually injecting: one script per module, and idempotent.
+  const injected = runLoader("https://train.example.com/js/data-loader.js?v=6");
+  injected.sb.SiteData.loadAll();
+  check("loadAll injects one script per module",
+    injected.appended.length === manifest.length);
+  injected.sb.SiteData.loadAll();
+  check("loadAll is idempotent — a second call injects nothing more",
+    injected.appended.length === manifest.length);
+
+  // Anything already present is skipped rather than re-requested.
+  const partial = runLoader("https://train.example.com/js/data-loader.js?v=6");
+  partial.sb.QUIZ_DATA = {};
+  partial.sb.QUIZ_DATA[manifest[0].id] = { questions: [] };
+  partial.sb.SiteData.loadAll();
+  check("already-loaded module data is not re-requested",
+    partial.appended.length === manifest.length - 1);
 }
 
 // --- the home page no longer hard-codes tiles --------------------------
