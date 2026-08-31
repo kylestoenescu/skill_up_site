@@ -1,0 +1,86 @@
+#!/bin/sh
+#
+# pre-push — run before `git push` sends anything.
+#
+# Two gates, both fast (the whole thing is ~2 seconds):
+#
+#   1. asset stamp   if js/ or css/ changed, the ?v= stamp in the HTML must
+#                    have been bumped too, or the deploy is invisible for up
+#                    to 4 hours. See tools/check-asset-stamp.js.
+#   2. test suite    tests/run-all.js, all suites.
+#
+# This file is version-controlled (unlike .git/hooks/, which is not) and is
+# active because the repo is configured with:
+#
+#     git config core.hooksPath tools/hooks
+#
+# That one command is needed once per clone. tools/hooks/install.sh does it.
+#
+# To push anyway in an emergency:  git push --no-verify
+# Do that only when you know why the check is wrong — it exists because both of
+# these failures are silent, and one of them has already broken the live site.
+
+set -u
+
+ZERO="0000000000000000000000000000000000000000"
+
+# Consume stdin up front. Git feeds the hook one line per ref being pushed:
+#   <local ref> <local sha> <remote ref> <remote sha>
+# Reading it all now stops node inheriting a half-read stdin later.
+refs=$(cat)
+
+# Work from the repo root no matter where git invoked us.
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+if [ -z "$refs" ]; then
+  exit 0
+fi
+
+echo ""
+echo "pre-push checks"
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "  node not found — skipping checks (install Node to enable them)."
+  exit 0
+fi
+
+# --- 1. asset stamp ---------------------------------------------------------
+# `while` in a pipeline runs in a subshell, so `exit 1` there ends the subshell
+# and becomes the pipeline's status — which is what the `||` below tests.
+if ! printf '%s\n' "$refs" | while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -z "${local_sha:-}" ] && continue
+
+  # Branch deletion: nothing being added, nothing to check.
+  [ "$local_sha" = "$ZERO" ] && continue
+
+  if [ "$remote_sha" = "$ZERO" ]; then
+    # Brand-new branch on the remote: compare against main if we have it,
+    # otherwise there is no meaningful base and we skip.
+    base=$(git rev-parse --verify --quiet origin/main 2>/dev/null) || base=""
+    [ -z "$base" ] && continue
+  else
+    base="$remote_sha"
+  fi
+
+  node tools/check-asset-stamp.js "$base" "$local_sha" || exit 1
+done; then
+  echo ""
+  echo "pre-push FAILED (asset stamp). Nothing was pushed."
+  exit 1
+fi
+
+# --- 2. tests ---------------------------------------------------------------
+if ! node tests/run-all.js > /tmp/skillup-prepush.log 2>&1; then
+  echo "  tests: FAILED"
+  echo ""
+  tail -40 /tmp/skillup-prepush.log
+  echo ""
+  echo "pre-push FAILED (tests). Nothing was pushed."
+  echo "Full output: /tmp/skillup-prepush.log"
+  exit 1
+fi
+echo "  tests: all suites passed"
+
+echo "pre-push OK"
+echo ""
+exit 0
